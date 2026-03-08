@@ -243,6 +243,20 @@ body {
 .upload-zone p  { font-size: .78rem; color: var(--text3); }
 .upload-zone.has-file { border-color: var(--green); border-style: solid; background: rgba(0,229,160,.04); }
 .upload-zone.has-file svg { color: var(--green); }
+.file-card {
+  background: var(--bg1); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 11px 14px;
+  display: flex; align-items: center; gap: 10px; margin-bottom: 8px;
+  animation: slideIn .18s ease;
+}
+.file-card-icon { width: 32px; height: 32px; border-radius: 8px; background: rgba(0,229,160,.1); display:flex; align-items:center; justify-content:center; color:var(--green); flex-shrink:0; }
+.file-card-icon svg { width: 15px; height: 15px; }
+.file-card-info { flex: 1; min-width: 0; }
+.file-card-name { font-size: .82rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text); }
+.file-card-meta { font-size: .7rem; color: var(--text3); margin-top: 1px; }
+.file-card-remove { width: 26px; height: 26px; border-radius: 6px; background: rgba(255,77,106,.08); border: 1px solid rgba(255,77,106,.2); color: var(--red); display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0; transition: all .12s; }
+.file-card-remove svg { width: 12px; height: 12px; }
+.file-card-remove:hover { background: rgba(255,77,106,.18); }
 
 /* ── PROGRESS / STATUS ── */
 .progress-wrap { background: var(--bg2); border-radius: 50px; height: 5px; overflow: hidden; margin: 8px 0; }
@@ -569,14 +583,16 @@ hr { border: none; border-top: 1px solid var(--border); margin: 14px 0; }
       </div>
     </div>
 
-    <!-- Upload zone -->
+    <!-- File list -->
+    <div id="file-list" style="margin-bottom:10px;"></div>
+
+    <!-- Upload zone (add more files) -->
     <div class="upload-zone" id="upload-zone">
       <svg><use href="#i-upload"/></svg>
-      <h3>Carregar recibo</h3>
-      <p>PDF ou imagem (JPG, PNG)<br>Arrasta ou clica para selecionar</p>
-      <input type="file" id="file-input" accept=".pdf,.jpg,.jpeg,.png" style="display:none">
+      <h3>Carregar recibo(s)</h3>
+      <p>PDF ou imagem · Podes adicionar<br>vários ficheiros (um por posto)</p>
+      <input type="file" id="file-input" accept=".pdf,.jpg,.jpeg,.png" multiple style="display:none">
     </div>
-    <div id="upload-filename" style="text-align:center;font-size:.75rem;color:var(--text3);margin-top:8px;"></div>
 
     <!-- Extraction progress -->
     <div id="extract-status" style="display:none;margin-top:14px;">
@@ -1230,13 +1246,19 @@ const Parser = {
 // ═══════════════════════════════════════════════════════
 const Upload = (() => {
   let uploadYM = Utils.curYM();
-  let extractedData = null;
-  let fileReady = false;
+  let files = []; // array of File objects
 
   function init() {
     document.getElementById('up-month-lbl').textContent = Utils.ymLabel(uploadYM);
-    extractedData = null;
-    fileReady = false;
+    files = [];
+    renderFileList();
+    document.getElementById('extract-status').style.display = 'none';
+    document.getElementById('extract-steps').innerHTML = '';
+    // reset zone appearance
+    const zone = document.getElementById('upload-zone');
+    zone.querySelector('h3').textContent = 'Carregar recibo(s)';
+    zone.querySelector('p').innerHTML = 'PDF ou imagem · Podes adicionar<br>vários ficheiros (um por posto)';
+    zone.classList.remove('has-file');
   }
 
   document.getElementById('up-prev').addEventListener('click', () => {
@@ -1248,24 +1270,53 @@ const Upload = (() => {
     document.getElementById('up-month-lbl').textContent = Utils.ymLabel(uploadYM);
   });
 
-  // Drag and drop
+  // Drag and drop + click
   const zone = document.getElementById('upload-zone');
   zone.addEventListener('click', () => document.getElementById('file-input').click());
   zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag'); });
   zone.addEventListener('dragleave', () => zone.classList.remove('drag'));
-  zone.addEventListener('drop', e => { e.preventDefault(); zone.classList.remove('drag'); handleFile(e.dataTransfer.files[0]); });
-  document.getElementById('file-input').addEventListener('change', e => handleFile(e.target.files[0]));
+  zone.addEventListener('drop', e => {
+    e.preventDefault(); zone.classList.remove('drag');
+    addFiles([...e.dataTransfer.files]);
+  });
+  document.getElementById('file-input').addEventListener('change', e => {
+    addFiles([...e.target.files]);
+    e.target.value = ''; // reset so same file can be re-added if needed
+  });
 
-  function handleFile(file) {
-    if (!file) return;
-    fileReady = true;
+  function addFiles(newFiles) {
+    newFiles.forEach(f => {
+      if (files.find(x => x.name === f.name && x.size === f.size)) return; // skip duplicate
+      files.push(f);
+    });
+    renderFileList();
+  }
+
+  function removeFile(idx) {
+    files.splice(idx, 1);
+    renderFileList();
+  }
+
+  function renderFileList() {
+    const c = document.getElementById('file-list');
+    if (!files.length) { c.innerHTML = ''; zone.classList.remove('has-file'); return; }
     zone.classList.add('has-file');
-    zone.querySelector('h3').textContent = file.name;
-    zone.querySelector('p').textContent = `${(file.size/1024).toFixed(0)} KB · ${file.type||'desconhecido'}`;
-    document.getElementById('upload-filename').textContent = '';
-    extractedData = null;
-    // Store file for later extraction
-    zone._file = file;
+    zone.querySelector('h3').textContent = `${files.length} ficheiro${files.length>1?'s':''} carregado${files.length>1?'s':''}`;
+    zone.querySelector('p').innerHTML = 'Clica para adicionar mais';
+
+    c.innerHTML = files.map((f, i) => {
+      const isPdf = f.type === 'application/pdf' || f.name.endsWith('.pdf');
+      return `<div class="file-card">
+        <div class="file-card-icon"><svg><use href="#${isPdf?'i-doc':'i-img'}"/></svg></div>
+        <div class="file-card-info">
+          <div class="file-card-name">${f.name}</div>
+          <div class="file-card-meta">${(f.size/1024).toFixed(0)} KB · ${isPdf?'PDF':'Imagem'}</div>
+        </div>
+        <button class="file-card-remove" onclick="Upload.removeFile(${i})" title="Remover">
+          <svg><use href="#i-x"/></svg>
+        </button>
+      </div>`;
+    }).join('');
   }
 
   // Manual toggle
@@ -1278,15 +1329,14 @@ const Upload = (() => {
 
   // Analyse button
   document.getElementById('btn-analyse').addEventListener('click', async () => {
-    // Check if manual data is filled
     if (manualOpen) {
-      extractedData = readManual();
-      if (!extractedData) { toast(`${icon('i-warn',14)} Preenche pelo menos as horas pagas`, 'err'); return; }
-      runAnalysis(extractedData, uploadYM, 'manual');
+      const data = readManual();
+      if (!data) { toast(`${icon('i-warn',14)} Preenche pelo menos as horas pagas`, 'err'); return; }
+      runAnalysis(data, uploadYM, 'manual');
       return;
     }
-    if (!zone._file) { toast(`${icon('i-warn',14)} Carrega um ficheiro primeiro`, 'err'); return; }
-    await extractAndAnalyse(zone._file);
+    if (!files.length) { toast(`${icon('i-warn',14)} Carrega pelo menos um ficheiro`, 'err'); return; }
+    await extractAllAndAnalyse();
   });
 
   function readManual() {
@@ -1307,18 +1357,22 @@ const Upload = (() => {
     };
   }
 
-  async function extractAndAnalyse(file) {
+  // Extract all files and merge results
+  async function extractAllAndAnalyse() {
     const statusDiv = document.getElementById('extract-status');
     const stepsDiv = document.getElementById('extract-steps');
     const progBar = document.getElementById('extract-progress');
     statusDiv.style.display = 'block';
     stepsDiv.innerHTML = '';
+    progBar.style.width = '0%';
 
-    function addStep(msg, type='run', pct=0) {
+    const addStep = (msg, type='run', pct) => {
       stepsDiv.innerHTML += `<div class="status-line ${type}">${type==='run'?`<div class="spinner"></div>`:icon(type==='ok'?'i-check':'i-warn',14)} ${msg}</div>`;
-      progBar.style.width = pct + '%';
-    }
-    function updateLastStep(msg, type, pct) {
+      if (pct !== undefined) progBar.style.width = pct + '%';
+      // scroll into view
+      stepsDiv.lastElementChild?.scrollIntoView({behavior:'smooth',block:'nearest'});
+    };
+    const updateLastStep = (msg, type, pct) => {
       const lines = stepsDiv.querySelectorAll('.status-line');
       if (lines.length) {
         const last = lines[lines.length-1];
@@ -1326,106 +1380,127 @@ const Upload = (() => {
         last.innerHTML = `${type==='ok'?icon('i-check',14):type==='err'?icon('i-warn',14):`<div class="spinner"></div>`} ${msg}`;
       }
       if (pct !== undefined) progBar.style.width = pct + '%';
-    }
+    };
 
-    let text = '';
-    try {
-      addStep('A ler ficheiro...', 'run', 10);
-      if (file.type === 'application/pdf' || file.name.endsWith('.pdf')) {
-        addStep('A extrair texto do PDF...', 'run', 20);
-        // Use PDF.js
-        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-        const arrayBuffer = await file.arrayBuffer();
-        const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-        let fullText = '';
-        for (let i = 1; i <= pdf.numPages; i++) {
-          const page = await pdf.getPage(i);
-          const content = await page.getTextContent();
-          fullText += content.items.map(item => item.str).join(' ') + '\n';
-        }
-        text = fullText;
-        updateLastStep('Texto extraído do PDF', 'ok', 50);
-      } else {
-        // Image — use Tesseract OCR
-        addStep('A inicializar OCR (Tesseract)...', 'run', 15);
-        const worker = await Tesseract.createWorker('por+eng', 1, {
-          logger: m => {
-            if (m.status === 'recognizing text') {
-              progBar.style.width = (15 + m.progress * 45) + '%';
-            }
+    const allData = [];
+    const perFile = 90 / files.length;
+
+    for (let fi = 0; fi < files.length; fi++) {
+      const file = files[fi];
+      const fileLabel = files.length > 1 ? ` (recibo ${fi+1}/${files.length})` : '';
+      const baseProgress = fi * perFile;
+
+      try {
+        let text = '';
+        if (file.type === 'application/pdf' || file.name.endsWith('.pdf')) {
+          addStep(`A extrair texto do PDF${fileLabel}...`, 'run', baseProgress + 5);
+          pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+          const arrayBuffer = await file.arrayBuffer();
+          const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+          let fullText = '';
+          for (let i = 1; i <= pdf.numPages; i++) {
+            const page = await pdf.getPage(i);
+            const content = await page.getTextContent();
+            fullText += content.items.map(item => item.str).join(' ') + '\n';
           }
-        });
-        addStep('A reconhecer texto na imagem...', 'run', 20);
-        const result = await worker.recognize(file);
-        text = result.data.text;
-        await worker.terminate();
-        updateLastStep('OCR concluído', 'ok', 60);
+          text = fullText;
+          updateLastStep(`PDF ${fi+1} extraído`, 'ok', baseProgress + perFile * 0.6);
+        } else {
+          addStep(`A fazer OCR${fileLabel}...`, 'run', baseProgress + 5);
+          const worker = await Tesseract.createWorker('por+eng', 1, {
+            logger: m => {
+              if (m.status === 'recognizing text')
+                progBar.style.width = (baseProgress + 5 + m.progress * perFile * 0.55) + '%';
+            }
+          });
+          const result = await worker.recognize(file);
+          text = result.data.text;
+          await worker.terminate();
+          updateLastStep(`OCR ${fi+1} concluído`, 'ok', baseProgress + perFile * 0.6);
+        }
+
+        if (!text.trim()) throw new Error('Sem texto reconhecido');
+        addStep(`A analisar recibo ${fi+1}...`, 'run', baseProgress + perFile * 0.7);
+        const data = Parser.parse(text);
+        data._fileName = file.name;
+        allData.push(data);
+        updateLastStep(`Recibo ${fi+1} analisado — ${Utils.minsToHHMM(data.payslipHoursMins||0)}`, 'ok', baseProgress + perFile);
+
+      } catch(err) {
+        updateLastStep(`Erro no ficheiro ${fi+1}: ${err.message}`, 'err');
+        toast(`${icon('i-warn',14)} Erro no ficheiro ${fi+1}. Tenta entrada manual.`, 'err');
       }
-
-      if (!text.trim()) throw new Error('Sem texto reconhecido');
-
-      addStep('A analisar dados do recibo...', 'run', 65);
-      const data = Parser.parse(text);
-      updateLastStep('Dados extraídos com sucesso', 'ok', 80);
-
-      addStep('A comparar com horas registadas...', 'run', 85);
-      await new Promise(r => setTimeout(r, 300));
-      updateLastStep('Comparação concluída', 'ok', 100);
-
-      extractedData = data;
-      await new Promise(r => setTimeout(r, 400));
-      runAnalysis(data, uploadYM, 'auto', text);
-
-    } catch(err) {
-      updateLastStep('Erro: ' + err.message, 'err', 100);
-      toast(`${icon('i-warn',14)} Erro na extração. Usa entrada manual.`, 'err');
-      document.getElementById('manual-section').style.display = 'block';
-      document.getElementById('btn-manual-toggle').textContent = 'Ocultar entrada manual';
-      manualOpen = true;
     }
+
+    if (!allData.length) return;
+
+    addStep('A combinar e comparar...', 'run', 92);
+    await new Promise(r => setTimeout(r, 300));
+
+    // MERGE all payslip data (sum numeric fields)
+    const merged = mergePayslipData(allData);
+    updateLastStep(`${allData.length} recibo${allData.length>1?'s':''} combinados`, 'ok', 100);
+
+    await new Promise(r => setTimeout(r, 350));
+    runAnalysis(merged, uploadYM, 'auto');
   }
 
-  function runAnalysis(data, ym, source, rawText='') {
+  // Merge multiple parsed payslips into one combined record
+  function mergePayslipData(dataArr) {
+    const sum = (key) => dataArr.reduce((t, d) => t + (d[key] || 0), 0);
+    const first = (key) => dataArr.find(d => d[key] != null)?.[key] ?? null;
+
+    return {
+      payslipHoursMins: sum('payslipHoursMins'),
+      rawHoursStr: dataArr.map(d => d.rawHoursStr || '?').join(' + '),
+      hourlyRate: first('hourlyRate') || 5.31,
+      vencimento: sum('vencimento') || null,
+      mealSubsidy: sum('mealSubsidy') || null,
+      natalSubsidy: sum('natalSubsidy') || null,
+      caducidade: sum('caducidade') || null,
+      feriasSubsidy: sum('feriasSubsidy') || null,
+      feriasNaoGozadas: sum('feriasNaoGozadas') || null,
+      totalAbonos: sum('totalAbonos') || null,
+      ssDiscount: sum('ssDiscount') || null,
+      totalLiquido: sum('totalLiquido') || null,
+      ssRate: first('ssRate'),
+      _fileNames: dataArr.map(d => d._fileName).filter(Boolean),
+      _count: dataArr.length,
+    };
+  }
+
+  function runAnalysis(data, ym, source) {
     const s = Store.getSettings();
     const shifts = Store.getShifts().filter(sh => sh.date.startsWith(ym));
     const regMins = shifts.reduce((t, sh) => t + sh.mins, 0);
     const regDays = new Set(shifts.map(sh => sh.date)).size;
 
-    // Build analysis record
     const analysis = {
       id: Date.now().toString(),
       ym, source, date: Utils.todayStr(),
       regMins, regDays,
       payslipData: data,
       settings: { ...s },
+      filesCount: data._count || 1,
     };
 
-    // Compute comparison
     const payMins = data.payslipHoursMins || 0;
     const diffMins = regMins - payMins;
-
     const expWage = Math.round(regMins / 60 * s.hourlyRate * 100) / 100;
     const expMeal = Math.round(regDays * s.mealRate * 100) / 100;
     const expGross = expWage + expMeal;
     const expSS = Math.round(expWage * s.ssRate / 100 * 100) / 100;
     const expNet = Math.round((expGross - expSS) * 100) / 100;
-
     const payLiquido = (data.totalLiquido || 0) + (data.cartaoRefeicao || 0);
     const diffNet = Math.round((expNet - payLiquido) * 100) / 100;
 
-    analysis.comparison = {
-      regMins, payMins, diffMins,
-      expWage, expMeal, expGross, expSS, expNet,
-      payLiquido, diffNet,
-    };
+    analysis.comparison = { regMins, payMins, diffMins, expWage, expMeal, expGross, expSS, expNet, payLiquido, diffNet };
 
-    // Determine verdict
     let verdict = 'ok';
     if (Math.abs(diffMins) > 10) verdict = diffMins > 0 ? 'alert' : 'warn';
     else if (Math.abs(diffNet) > 0.50) verdict = 'warn';
     analysis.verdict = verdict;
 
-    // Save
     const analyses = Store.getAnalyses();
     const existing = analyses.findIndex(a => a.ym === ym);
     if (existing >= 0) analyses[existing] = analysis;
@@ -1437,7 +1512,7 @@ const Upload = (() => {
     Analysis.render();
   }
 
-  return { init };
+  return { init, removeFile };
 })();
 
 // ═══════════════════════════════════════════════════════
@@ -1575,7 +1650,11 @@ const Analysis = (() => {
         <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
           <span>Fonte</span><span class="badge ${a.source==='auto'?'badge-green':'badge-blue'}">${a.source==='auto'?'Extração automática':'Manual'}</span>
         </div>
-        <div style="display:flex;justify-content:space-between;">
+        ${a.filesCount > 1 ? `<div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+          <span>Recibos combinados</span><span class="badge badge-amber">${a.filesCount} recibos</span>
+        </div>
+        ${(a.payslipData._fileNames||[]).map(n=>`<div style="font-size:.7rem;color:var(--text3);padding:2px 0 0 8px;">· ${n}</div>`).join('')}` : ''}
+        <div style="display:flex;justify-content:space-between;margin-top:4px;">
           <span>Período</span><strong style="color:var(--text2);">${Utils.ymLabel(a.ym)}</strong>
         </div>
       </div>
