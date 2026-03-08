@@ -3,305 +3,513 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#0d0f14">
+<meta name="theme-color" content="#08090d">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="ShiftTrack">
+<meta name="description" content="Verifica se foste pago corretamente">
 <title>ShiftTrack</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300;12..96,400;12..96,600;12..96,700;12..96,800&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap');
-:root{--bg:#0d0f14;--bg2:#13161e;--bg3:#1a1e28;--card:#171b24;--card2:#1e2330;--border:#2a2f3d;--accent:#00d4aa;--accent2:#0099ff;--accent3:#ff6b4a;--accent4:#f5c842;--text:#eef0f6;--text2:#8890a8;--text3:#555e72;--success:#22c55e;--danger:#ef4444;--radius:16px;--radius-sm:10px;--shadow:0 4px 24px rgba(0,0,0,.4);--shadow-accent:0 0 24px rgba(0,212,170,.15);--nav-h:68px;--ease:.22s cubic-bezier(.4,0,.2,1)}
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html{font-size:16px;-webkit-tap-highlight-color:transparent}
-body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100dvh;overflow-x:hidden;-webkit-font-smoothing:antialiased}
-h1,h2,h3{font-family:'Syne',sans-serif}
-h1{font-size:1.6rem;font-weight:800;letter-spacing:-.5px}
-h2{font-size:1.1rem;font-weight:700}
-::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
-#app{display:flex;flex-direction:column;min-height:100dvh}
-.screen{display:none;flex-direction:column;min-height:calc(100dvh - var(--nav-h));padding-bottom:calc(var(--nav-h) + 12px);animation:fadeUp .3s ease forwards}
-.screen.active{display:flex}
-@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
-.scroll-area{flex:1;overflow-y:auto;padding:20px 16px 8px;overscroll-behavior:contain}
+/* ════════════════════════════════════════════
+   DESIGN SYSTEM
+════════════════════════════════════════════ */
+:root {
+  --bg:       #08090d;
+  --bg1:      #0e1018;
+  --bg2:      #141720;
+  --bg3:      #1c2030;
+  --border:   #252a3a;
+  --border2:  #2e3448;
+  --green:    #00e5a0;
+  --green2:   #00b87a;
+  --red:      #ff4d6a;
+  --amber:    #ffb547;
+  --blue:     #4d8fff;
+  --text:     #eef1fa;
+  --text2:    #7c85a2;
+  --text3:    #3d4460;
+  --radius:   14px;
+  --radius-sm:9px;
+  --nav:      64px;
+  --font:     'Bricolage Grotesque', sans-serif;
+  --mono:     'JetBrains Mono', monospace;
+}
 
-/* topbar */
-.topbar{position:sticky;top:0;z-index:50;background:linear-gradient(180deg,var(--bg) 80%,transparent);padding:20px 16px 12px;display:flex;align-items:center;justify-content:space-between;backdrop-filter:blur(12px)}
-.topbar-title{display:flex;flex-direction:column;gap:2px}
-.topbar-title .greeting{font-size:.72rem;color:var(--text3);letter-spacing:.5px;text-transform:uppercase;font-family:'Syne',sans-serif}
-.topbar-logo{width:40px;height:40px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:12px;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:.85rem;color:#0d0f14;box-shadow:var(--shadow-accent);flex-shrink:0}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; -webkit-tap-highlight-color: transparent; scroll-behavior: smooth; }
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100dvh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+::-webkit-scrollbar { width: 3px; }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
 
-/* nav */
-.bottom-nav{position:fixed;bottom:0;left:0;right:0;height:var(--nav-h);background:var(--bg2);border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-around;z-index:100;padding:0 8px;padding-bottom:env(safe-area-inset-bottom,0px)}
-.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:8px 4px;border:none;background:none;color:var(--text3);cursor:pointer;transition:color var(--ease),transform var(--ease);position:relative;border-radius:12px;min-width:0}
-.nav-btn:active{transform:scale(.92)}
-.nav-btn.active{color:var(--accent)}
-.nav-btn .nav-icon{width:22px;height:22px;transition:transform var(--ease);display:block}
-.nav-btn.active .nav-icon{transform:scale(1.12)}
-.nav-btn .nav-label{font-size:.62rem;font-family:'Syne',sans-serif;font-weight:600;letter-spacing:.3px;white-space:nowrap}
-.nav-btn::after{content:'';position:absolute;top:4px;left:50%;transform:translateX(-50%) scaleX(0);width:24px;height:3px;background:var(--accent);border-radius:0 0 3px 3px;transition:transform var(--ease)}
-.nav-btn.active::after{transform:translateX(-50%) scaleX(1)}
+/* ── LAYOUT ── */
+#root { display: flex; flex-direction: column; min-height: 100dvh; }
+.page { display: none; flex-direction: column; flex: 1; animation: fadeIn .25s ease; }
+.page.active { display: flex; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+.scroll { flex: 1; overflow-y: auto; padding: 20px 16px calc(var(--nav) + 20px); overscroll-behavior: contain; }
+@media(min-width:600px) { .scroll { padding: 28px 24px calc(var(--nav) + 24px); max-width: 640px; margin: 0 auto; width: 100%; } }
 
-/* cards */
-.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:12px;position:relative;overflow:hidden;transition:transform var(--ease)}
-.card:active{transform:scale(.985)}
-.card-accent{border-color:rgba(0,212,170,.25);box-shadow:var(--shadow-accent)}
-.card-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
-.stat-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;display:flex;flex-direction:column;gap:8px;position:relative;overflow:hidden}
-.stat-card::before{content:'';position:absolute;top:0;right:0;width:60px;height:60px;border-radius:0 var(--radius) 0 60px;opacity:.1}
-.stat-card.c1::before{background:var(--accent)}.stat-card.c2::before{background:var(--accent2)}.stat-card.c3::before{background:var(--accent3)}.stat-card.c4::before{background:var(--accent4)}
-.stat-icon{width:26px;height:26px;color:var(--text3)}
-.stat-label{font-size:.7rem;color:var(--text3);font-family:'Syne',sans-serif;font-weight:600;letter-spacing:.4px;text-transform:uppercase}
-.stat-value{font-family:'Syne',sans-serif;font-weight:800;font-size:1.35rem;line-height:1;color:var(--text)}
-.stat-value.accent{color:var(--accent)}.stat-value.blue{color:var(--accent2)}.stat-value.orange{color:var(--accent3)}.stat-value.yellow{color:var(--accent4)}
-.stat-sub{font-size:.7rem;color:var(--text2)}
+/* ── TOPBAR ── */
+.topbar {
+  position: sticky; top: 0; z-index: 40;
+  padding: 18px 16px 14px;
+  background: linear-gradient(180deg, var(--bg) 70%, transparent);
+  backdrop-filter: blur(16px);
+  display: flex; align-items: flex-end; justify-content: space-between;
+}
+.topbar-left { display: flex; flex-direction: column; gap: 1px; }
+.topbar-eyebrow { font-size: .65rem; letter-spacing: 1.2px; text-transform: uppercase; color: var(--green); font-weight: 600; }
+.topbar-title { font-size: 1.55rem; font-weight: 800; letter-spacing: -.5px; line-height: 1; }
+.topbar-badge {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 50px; padding: 6px 12px;
+  font-size: .7rem; font-family: var(--mono);
+  color: var(--text2); letter-spacing: .3px;
+}
 
-/* section */
-.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
-.section-header h2{font-size:1.05rem;color:var(--text2);letter-spacing:.2px}
-.see-all{font-size:.75rem;color:var(--accent);font-family:'Syne',sans-serif;font-weight:600;cursor:pointer;border:none;background:none;padding:4px 0}
+/* ── BOTTOM NAV ── */
+.nav {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  height: var(--nav); background: var(--bg1);
+  border-top: 1px solid var(--border);
+  display: flex; align-items: stretch;
+  z-index: 100; padding-bottom: env(safe-area-inset-bottom, 0);
+}
+.nav-btn {
+  flex: 1; display: flex; flex-direction: column; align-items: center;
+  justify-content: center; gap: 3px; border: none; background: none;
+  color: var(--text3); cursor: pointer; transition: color .18s ease;
+  position: relative; padding: 0;
+}
+.nav-btn.active { color: var(--green); }
+.nav-btn svg { width: 20px; height: 20px; }
+.nav-btn span { font-size: .58rem; font-family: var(--font); font-weight: 700; letter-spacing: .5px; text-transform: uppercase; }
+.nav-btn::before {
+  content: ''; position: absolute; top: 0; left: 50%;
+  transform: translateX(-50%) scaleX(0);
+  width: 28px; height: 2px; background: var(--green);
+  border-radius: 0 0 2px 2px; transition: transform .18s ease;
+}
+.nav-btn.active::before { transform: translateX(-50%) scaleX(1); }
 
-/* chart */
-.chart-wrap{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:12px}
-.chart-title{font-size:.82rem;color:var(--text2);font-family:'Syne',sans-serif;font-weight:600;margin-bottom:14px;letter-spacing:.3px;text-transform:uppercase}
-.chart-container{position:relative;height:180px}
+/* ── CARDS ── */
+.card {
+  background: var(--bg1); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 18px; margin-bottom: 12px;
+  position: relative; overflow: hidden;
+}
+.card-green { border-color: rgba(0,229,160,.25); background: rgba(0,229,160,.04); }
+.card-red   { border-color: rgba(255,77,106,.25); background: rgba(255,77,106,.04); }
+.card-amber { border-color: rgba(255,181,71,.25); background: rgba(255,181,71,.04); }
+.card-blue  { border-color: rgba(77,143,255,.25); background: rgba(77,143,255,.04); }
+.card-glow::after {
+  content: ''; position: absolute; top: -40px; right: -40px;
+  width: 120px; height: 120px;
+  background: radial-gradient(circle, rgba(0,229,160,.08), transparent 70%);
+  border-radius: 50%; pointer-events: none;
+}
 
-/* forms */
-.form-group{margin-bottom:16px}
-.form-label{display:block;font-size:.72rem;color:var(--text3);font-family:'Syne',sans-serif;font-weight:600;letter-spacing:.4px;text-transform:uppercase;margin-bottom:6px}
-.form-control{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:13px 14px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:.95rem;transition:border-color var(--ease),box-shadow var(--ease);-webkit-appearance:none;appearance:none}
-.form-control:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(0,212,170,.1)}
-.form-control::placeholder{color:var(--text3)}
-select.form-control{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238890a8' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:36px}
-.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.form-calc-preview{background:rgba(0,212,170,.06);border:1px solid rgba(0,212,170,.2);border-radius:var(--radius-sm);padding:14px;margin:16px 0;display:flex;align-items:center;justify-content:space-between}
-.form-calc-label{font-size:.78rem;color:var(--text2);font-family:'Syne',sans-serif;display:flex;align-items:center;gap:8px}
-.form-calc-label svg{width:16px;height:16px;color:var(--accent);flex-shrink:0}
-.form-calc-value{font-size:1.2rem;font-family:'Syne',sans-serif;font-weight:800;color:var(--accent)}
-textarea.form-control{resize:none;min-height:80px;line-height:1.5}
+/* ── STATS GRID ── */
+.stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+.stat {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 14px 16px;
+  display: flex; flex-direction: column; gap: 6px;
+}
+.stat-label { font-size: .65rem; color: var(--text3); text-transform: uppercase; letter-spacing: .8px; font-weight: 700; }
+.stat-val { font-family: var(--mono); font-size: 1.4rem; font-weight: 500; color: var(--text); line-height: 1; }
+.stat-val.green { color: var(--green); }
+.stat-val.red   { color: var(--red); }
+.stat-val.amber { color: var(--amber); }
+.stat-val.blue  { color: var(--blue); }
+.stat-sub { font-size: .7rem; color: var(--text3); }
 
-/* buttons */
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:14px 20px;border-radius:var(--radius-sm);font-family:'Syne',sans-serif;font-weight:700;font-size:.9rem;cursor:pointer;border:none;transition:all var(--ease);letter-spacing:.3px;white-space:nowrap}
-.btn svg{width:18px;height:18px;flex-shrink:0}
-.btn:active{transform:scale(.96)}
-.btn-primary{background:linear-gradient(135deg,var(--accent),#00b894);color:#0d0f14;box-shadow:0 4px 16px rgba(0,212,170,.3);width:100%}
-.btn-secondary{background:var(--card2);color:var(--text2);border:1px solid var(--border);width:100%}
-.btn-danger{background:rgba(239,68,68,.12);color:var(--danger);border:1px solid rgba(239,68,68,.2)}
-.btn-sm{padding:8px 14px;font-size:.78rem;border-radius:8px}
-.btn-icon{width:34px;height:34px;padding:0;border-radius:9px;background:var(--bg3);border:1px solid var(--border);color:var(--text3);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;transition:all var(--ease);flex-shrink:0}
-.btn-icon svg{width:15px;height:15px}
-.btn-icon.danger{color:var(--danger);border-color:rgba(239,68,68,.2);background:rgba(239,68,68,.06)}
+/* ── FORMS ── */
+.form-group { margin-bottom: 14px; }
+.form-label {
+  display: block; font-size: .68rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .8px;
+  color: var(--text3); margin-bottom: 6px;
+}
+.form-control {
+  width: 100%; background: var(--bg2); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 12px 14px;
+  color: var(--text); font-family: var(--font); font-size: .95rem;
+  transition: border-color .15s, box-shadow .15s;
+  -webkit-appearance: none; appearance: none;
+}
+.form-control:focus { outline: none; border-color: var(--green); box-shadow: 0 0 0 3px rgba(0,229,160,.1); }
+.form-control::placeholder { color: var(--text3); }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.form-preview {
+  background: rgba(0,229,160,.06); border: 1px solid rgba(0,229,160,.2);
+  border-radius: var(--radius-sm); padding: 12px 14px;
+  display: flex; align-items: center; justify-content: space-between;
+  margin: 12px 0;
+}
+.form-preview-label { font-size: .75rem; color: var(--text2); display: flex; align-items: center; gap: 6px; }
+.form-preview-val { font-family: var(--mono); font-size: 1.15rem; font-weight: 500; color: var(--green); }
 
-/* shifts */
-.shift-list{display:flex;flex-direction:column;gap:10px}
-.shift-item{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:15px 16px;display:flex;align-items:center;gap:14px;animation:fadeUp .25s ease forwards;position:relative;overflow:hidden}
-.shift-item::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--accent);border-radius:3px 0 0 3px}
-.shift-date-badge{background:var(--bg3);border-radius:10px;padding:8px 10px;display:flex;flex-direction:column;align-items:center;min-width:44px;flex-shrink:0}
-.shift-date-day{font-family:'Syne',sans-serif;font-weight:800;font-size:1.2rem;line-height:1;color:var(--accent)}
-.shift-date-month{font-size:.6rem;font-family:'Syne',sans-serif;font-weight:600;text-transform:uppercase;color:var(--text3);letter-spacing:.3px}
-.shift-info{flex:1;min-width:0}
-.shift-client{font-family:'Syne',sans-serif;font-weight:700;font-size:.9rem;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.shift-meta{font-size:.75rem;color:var(--text3);margin-top:3px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-.shift-meta svg{width:12px;height:12px;flex-shrink:0;color:var(--text3)}
-.shift-hours{font-family:'Syne',sans-serif;font-weight:800;font-size:1.1rem;color:var(--accent);flex-shrink:0}
-.shift-actions{display:flex;gap:6px;flex-shrink:0}
+/* ── BUTTONS ── */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 13px 20px; border-radius: var(--radius-sm); border: none; cursor: pointer;
+  font-family: var(--font); font-weight: 700; font-size: .88rem;
+  letter-spacing: .3px; transition: all .15s ease; white-space: nowrap;
+}
+.btn svg { width: 17px; height: 17px; flex-shrink: 0; }
+.btn:active { transform: scale(.96); }
+.btn-primary { background: var(--green); color: #08090d; width: 100%; box-shadow: 0 4px 20px rgba(0,229,160,.25); }
+.btn-primary:hover { background: #1aebac; }
+.btn-secondary { background: var(--bg2); color: var(--text2); border: 1px solid var(--border); width: 100%; }
+.btn-danger { background: rgba(255,77,106,.12); color: var(--red); border: 1px solid rgba(255,77,106,.2); }
+.btn-sm { padding: 8px 14px; font-size: .78rem; border-radius: 8px; }
+.btn-icon {
+  width: 32px; height: 32px; padding: 0; border-radius: 8px;
+  background: var(--bg2); border: 1px solid var(--border);
+  color: var(--text3); display: inline-flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: all .15s; flex-shrink: 0;
+}
+.btn-icon svg { width: 14px; height: 14px; }
+.btn-icon.danger { color: var(--red); border-color: rgba(255,77,106,.2); background: rgba(255,77,106,.06); }
 
-/* empty */
-.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 24px;text-align:center;gap:12px}
-.empty-icon{width:52px;height:52px;color:var(--text3);opacity:.45}
-.empty-title{font-size:1rem;color:var(--text2);font-family:'Syne',sans-serif;font-weight:700}
-.empty-sub{font-size:.82rem;color:var(--text3);line-height:1.5}
+/* ── SHIFT ITEMS ── */
+.shift-item {
+  background: var(--bg1); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 14px 16px;
+  display: flex; align-items: center; gap: 12px;
+  margin-bottom: 8px; position: relative;
+  animation: slideIn .2s ease;
+}
+@keyframes slideIn { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
+.shift-item::before {
+  content: ''; position: absolute; left: 0; top: 8px; bottom: 8px;
+  width: 3px; background: var(--green); border-radius: 0 3px 3px 0;
+}
+.shift-day {
+  background: var(--bg3); border-radius: 10px;
+  padding: 8px; min-width: 42px; text-align: center; flex-shrink: 0;
+}
+.shift-day-num { font-family: var(--mono); font-size: 1.15rem; font-weight: 500; color: var(--green); line-height: 1; }
+.shift-day-mo  { font-size: .58rem; color: var(--text3); text-transform: uppercase; letter-spacing: .5px; margin-top: 2px; }
+.shift-body { flex: 1; min-width: 0; }
+.shift-time { font-size: .82rem; color: var(--text2); display: flex; align-items: center; gap: 6px; }
+.shift-time svg { width: 12px; height: 12px; color: var(--text3); flex-shrink: 0; }
+.shift-dur { font-family: var(--mono); font-size: 1.05rem; font-weight: 500; color: var(--text); flex-shrink: 0; }
+.shift-client { font-size: .78rem; color: var(--text3); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.shift-actions { display: flex; gap: 6px; flex-shrink: 0; }
 
-/* month selector */
-.month-selector{display:flex;align-items:center;justify-content:space-between;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;margin-bottom:16px}
-.month-label{font-family:'Syne',sans-serif;font-weight:700;font-size:1rem}
-.month-nav{width:32px;height:32px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text2);transition:all var(--ease)}
-.month-nav svg{width:16px;height:16px}
-.month-nav:active{background:var(--accent);color:#0d0f14;border-color:var(--accent)}
+/* ── MONTH SELECTOR ── */
+.month-sel {
+  display: flex; align-items: center; justify-content: space-between;
+  background: var(--bg1); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 12px 14px; margin-bottom: 14px;
+}
+.month-nav {
+  width: 30px; height: 30px; background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 7px; display: flex; align-items: center; justify-content: center;
+  cursor: pointer; color: var(--text2); transition: all .15s;
+}
+.month-nav:active { background: var(--green); color: var(--bg); border-color: var(--green); }
+.month-nav svg { width: 14px; height: 14px; }
+.month-lbl { font-size: .95rem; font-weight: 700; letter-spacing: -.2px; }
 
-/* settings */
-.settings-section{margin-bottom:24px}
-.settings-title{font-size:.7rem;font-family:'Syne',sans-serif;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;padding:0 4px;display:flex;align-items:center;gap:6px}
-.settings-title svg{width:13px;height:13px}
-.settings-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
-.settings-item{display:flex;align-items:center;justify-content:space-between;padding:16px;border-bottom:1px solid var(--border);gap:12px}
-.settings-item:last-child{border-bottom:none}
-.settings-item-info{flex:1}
-.settings-item-label{font-size:.9rem;font-weight:500;color:var(--text)}
-.settings-item-sub{font-size:.75rem;color:var(--text3);margin-top:2px}
-.settings-item-control .form-control{width:120px;padding:8px 12px;font-size:.9rem;margin:0}
+/* ── EMPTY STATE ── */
+.empty {
+  display: flex; flex-direction: column; align-items: center;
+  padding: 48px 24px; text-align: center; gap: 10px;
+}
+.empty svg { width: 48px; height: 48px; color: var(--text3); opacity: .4; }
+.empty h3 { font-size: 1rem; color: var(--text2); font-weight: 700; }
+.empty p  { font-size: .82rem; color: var(--text3); line-height: 1.5; }
 
-/* comparison */
-.comparison-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
-.comp-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px;text-align:center}
-.comp-label{font-size:.65rem;font-family:'Syne',sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text3);margin-bottom:6px}
-.comp-value{font-family:'Syne',sans-serif;font-weight:800;font-size:1.25rem}
-.comp-value.pos{color:var(--success)}.comp-value.neg{color:var(--danger)}.comp-value.neu{color:var(--text2)}
-.diff-banner{border-radius:var(--radius);padding:16px;text-align:center;margin-bottom:12px;border:1px solid;display:flex;flex-direction:column;align-items:center;gap:8px}
-.diff-banner.pos{background:rgba(34,197,94,.08);border-color:rgba(34,197,94,.25)}
-.diff-banner.neg{background:rgba(239,68,68,.08);border-color:rgba(239,68,68,.25)}
-.diff-banner.neu{background:rgba(136,144,168,.08);border-color:rgba(136,144,168,.2)}
-.diff-icon{width:38px;height:38px}
-.diff-banner.pos .diff-icon{color:var(--success)}.diff-banner.neg .diff-icon{color:var(--danger)}.diff-banner.neu .diff-icon{color:var(--text2)}
-.diff-title{font-family:'Syne',sans-serif;font-weight:800;font-size:1rem}
-.diff-sub{font-size:.78rem;color:var(--text2);line-height:1.4}
+/* ── UPLOAD ZONE ── */
+.upload-zone {
+  border: 2px dashed var(--border2); border-radius: var(--radius);
+  padding: 32px 20px; text-align: center; cursor: pointer;
+  transition: all .2s ease; background: var(--bg1);
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+}
+.upload-zone:hover, .upload-zone.drag { border-color: var(--green); background: rgba(0,229,160,.04); }
+.upload-zone svg { width: 40px; height: 40px; color: var(--text3); }
+.upload-zone h3 { font-size: .95rem; font-weight: 700; color: var(--text2); }
+.upload-zone p  { font-size: .78rem; color: var(--text3); }
+.upload-zone.has-file { border-color: var(--green); border-style: solid; background: rgba(0,229,160,.04); }
+.upload-zone.has-file svg { color: var(--green); }
 
-/* reports */
-.report-summary-card{background:linear-gradient(135deg,var(--card2),var(--card));border:1px solid rgba(0,212,170,.2);border-radius:var(--radius);padding:20px;margin-bottom:12px;position:relative;overflow:hidden}
-.report-summary-card::after{content:'';position:absolute;top:-30px;right:-30px;width:120px;height:120px;background:radial-gradient(circle,rgba(0,212,170,.12),transparent 70%);border-radius:50%}
-.report-month-title{font-family:'Syne',sans-serif;font-weight:800;font-size:1.4rem;margin-bottom:4px;background:linear-gradient(135deg,var(--text),var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-.report-meta{font-size:.8rem;color:var(--text3);margin-bottom:18px}
-.report-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
-.report-stat{text-align:center}
-.report-stat-value{font-family:'Syne',sans-serif;font-weight:800;font-size:1.2rem;color:var(--accent);display:block}
-.report-stat-label{font-size:.65rem;color:var(--text3);text-transform:uppercase;letter-spacing:.3px;font-family:'Syne',sans-serif;font-weight:600}
-.export-btn-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
-.btn-export{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;color:var(--text2);font-family:'Syne',sans-serif;font-weight:700;font-size:.82rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all var(--ease);letter-spacing:.3px}
-.btn-export svg{width:17px;height:17px;flex-shrink:0}
-.btn-export:active{transform:scale(.96)}
-.btn-export.csv:hover{border-color:var(--success);color:var(--success);background:rgba(34,197,94,.06)}
-.btn-export.pdf:hover{border-color:var(--accent3);color:var(--accent3);background:rgba(255,107,74,.06)}
+/* ── PROGRESS / STATUS ── */
+.progress-wrap { background: var(--bg2); border-radius: 50px; height: 5px; overflow: hidden; margin: 8px 0; }
+.progress-bar { height: 100%; background: linear-gradient(90deg, var(--green), var(--blue)); border-radius: 50px; transition: width .3s ease; }
+.status-line {
+  display: flex; align-items: center; gap: 8px; padding: 10px 14px;
+  background: var(--bg2); border-radius: var(--radius-sm); margin-bottom: 6px;
+  font-size: .8rem; color: var(--text2);
+}
+.status-line svg { width: 14px; height: 14px; flex-shrink: 0; }
+.status-line.ok  { color: var(--green); background: rgba(0,229,160,.06); }
+.status-line.err { color: var(--red);   background: rgba(255,77,106,.06); }
+.status-line.run { color: var(--amber); background: rgba(255,181,71,.06); }
 
-/* modal */
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;display:none;align-items:flex-end;backdrop-filter:blur(4px)}
-.modal-overlay.open{display:flex;animation:fadeIn .2s ease}
-@keyframes fadeIn{from{opacity:0}to{opacity:1}}
-.modal{background:var(--bg2);border-radius:24px 24px 0 0;padding:24px 20px;width:100%;max-height:90dvh;overflow-y:auto;animation:slideUp .3s cubic-bezier(.34,1.56,.64,1);border-top:1px solid var(--border)}
-@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
-.modal-handle{width:36px;height:4px;background:var(--border);border-radius:4px;margin:0 auto 20px}
-.modal-title{font-family:'Syne',sans-serif;font-weight:800;font-size:1.2rem;margin-bottom:20px;display:flex;align-items:center;gap:10px}
-.modal-title svg{width:20px;height:20px;color:var(--accent);flex-shrink:0}
-.modal-footer{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:20px}
-.modal-del-icon{width:48px;height:48px;margin:0 auto 12px;color:var(--danger)}
+/* ── ANALYSIS RESULT ── */
+.result-verdict {
+  border-radius: var(--radius); padding: 20px; text-align: center;
+  margin-bottom: 14px; border: 1px solid; display: flex; flex-direction: column;
+  align-items: center; gap: 8px;
+}
+.result-verdict.ok    { background: rgba(0,229,160,.06); border-color: rgba(0,229,160,.3); }
+.result-verdict.warn  { background: rgba(255,181,71,.06); border-color: rgba(255,181,71,.3); }
+.result-verdict.alert { background: rgba(255,77,106,.06); border-color: rgba(255,77,106,.3); }
+.verdict-icon { width: 44px; height: 44px; }
+.verdict-icon svg { width: 100%; height: 100%; }
+.result-verdict.ok    .verdict-icon { color: var(--green); }
+.result-verdict.warn  .verdict-icon { color: var(--amber); }
+.result-verdict.alert .verdict-icon { color: var(--red);   }
+.verdict-title { font-size: 1.1rem; font-weight: 800; letter-spacing: -.3px; }
+.verdict-sub   { font-size: .82rem; color: var(--text2); line-height: 1.4; }
 
-/* toast */
-.toast{position:fixed;bottom:calc(var(--nav-h) + 16px);left:50%;transform:translateX(-50%) translateY(20px);background:var(--card2);border:1px solid var(--border);border-radius:50px;padding:10px 20px;font-size:.82rem;font-family:'Syne',sans-serif;font-weight:600;color:var(--text);z-index:300;opacity:0;transition:all .3s cubic-bezier(.34,1.56,.64,1);white-space:nowrap;box-shadow:var(--shadow);display:flex;align-items:center;gap:8px;pointer-events:none}
-.toast svg{width:15px;height:15px;flex-shrink:0}
-.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-.toast.success{border-color:rgba(34,197,94,.4);color:var(--success)}
-.toast.error{border-color:rgba(239,68,68,.4);color:var(--danger)}
+/* ── BREAKDOWN TABLE ── */
+.breakdown {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: var(--radius); overflow: hidden; margin-bottom: 12px;
+}
+.breakdown-head {
+  display: grid; grid-template-columns: 1fr 72px 72px 60px;
+  padding: 8px 14px; background: rgba(0,229,160,.06);
+  border-bottom: 1px solid var(--border);
+}
+.breakdown-head span {
+  font-size: .6rem; font-family: var(--mono); text-transform: uppercase;
+  letter-spacing: .8px; color: var(--text3); font-weight: 500;
+}
+.breakdown-head span:not(:first-child) { text-align: right; }
+.brow {
+  display: grid; grid-template-columns: 1fr 72px 72px 60px;
+  padding: 9px 14px; border-bottom: 1px solid var(--border); align-items: center;
+}
+.brow:last-child { border-bottom: none; }
+.brow.total { background: rgba(0,0,0,.2); }
+.brow.total .bl { font-weight: 700; color: var(--text); }
+.brow.highlight { background: rgba(77,143,255,.05); }
+.bl { font-size: .8rem; color: var(--text2); }
+.bv { font-size: .8rem; text-align: right; font-family: var(--mono); font-weight: 500; color: var(--text); }
+.bv.green { color: var(--green); }
+.bv.red   { color: var(--red);   }
+.bv.amber { color: var(--amber); }
+.bd { font-size: .75rem; text-align: right; font-family: var(--mono); font-weight: 700; }
+.bd.ok  { color: var(--text3); }
+.bd.neg { color: var(--red); }
+.bd.pos { color: var(--green); }
 
-/* install banner */
-.install-banner{position:fixed;bottom:calc(var(--nav-h) + 12px);left:12px;right:12px;background:linear-gradient(135deg,var(--card2),var(--card));border:1px solid rgba(0,212,170,.3);border-radius:var(--radius);padding:14px 16px;display:none;align-items:center;gap:12px;z-index:150;box-shadow:var(--shadow),var(--shadow-accent);animation:slideUp .4s cubic-bezier(.34,1.56,.64,1)}
-.install-banner.show{display:flex}
-.install-banner-icon{width:34px;height:34px;color:var(--accent);flex-shrink:0}
-.install-info{flex:1}
-.install-info strong{font-family:'Syne',sans-serif;font-size:.85rem;display:block}
-.install-info span{font-size:.72rem;color:var(--text3)}
-.install-banner .btn{padding:8px 16px;width:auto;font-size:.78rem}
+/* ── HISTORY LIST ── */
+.hist-item {
+  background: var(--bg1); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 14px 16px; margin-bottom: 8px;
+  display: flex; align-items: center; gap: 12px; cursor: pointer;
+  transition: border-color .15s;
+}
+.hist-item:hover { border-color: var(--border2); }
+.hist-month-badge {
+  background: var(--bg3); border-radius: 10px; padding: 10px 12px;
+  text-align: center; flex-shrink: 0; min-width: 52px;
+}
+.hist-month-badge .mo { font-size: .65rem; color: var(--text3); text-transform: uppercase; letter-spacing: .5px; }
+.hist-month-badge .yr { font-family: var(--mono); font-size: .85rem; color: var(--green); font-weight: 500; }
+.hist-info { flex: 1; min-width: 0; }
+.hist-title { font-size: .9rem; font-weight: 700; }
+.hist-sub   { font-size: .75rem; color: var(--text3); margin-top: 2px; }
+.hist-status { flex-shrink: 0; }
+.pill {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 8px; border-radius: 20px; font-size: .62rem;
+  font-weight: 700; text-transform: uppercase; letter-spacing: .5px;
+}
+.pill.ok    { background: rgba(0,229,160,.12); color: var(--green); }
+.pill.warn  { background: rgba(255,181,71,.12); color: var(--amber); }
+.pill.alert { background: rgba(255,77,106,.12); color: var(--red);   }
 
-/* badge */
-.badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:.65rem;font-family:'Syne',sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:.3px}
-.badge-accent{background:rgba(0,212,170,.15);color:var(--accent)}
-.badge-blue{background:rgba(0,153,255,.15);color:var(--accent2)}
+/* ── MODAL ── */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,.7);
+  z-index: 200; display: none; align-items: flex-end;
+  backdrop-filter: blur(4px);
+}
+.modal-overlay.open { display: flex; animation: fadeIn .2s ease; }
+.modal {
+  background: var(--bg1); border-radius: 22px 22px 0 0;
+  padding: 24px 20px; width: 100%; max-height: 85dvh;
+  overflow-y: auto; animation: slideUp .3s cubic-bezier(.34,1.56,.64,1);
+  border-top: 1px solid var(--border);
+}
+@keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+.modal-handle { width: 32px; height: 3px; background: var(--border2); border-radius: 3px; margin: 0 auto 20px; }
+.modal-title { font-size: 1.15rem; font-weight: 800; letter-spacing: -.3px; margin-bottom: 18px; display: flex; align-items: center; gap: 8px; }
+.modal-title svg { width: 18px; height: 18px; color: var(--green); }
+.modal-footer { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 18px; }
 
-@media(min-width:480px){.scroll-area{padding:24px 20px 8px}.topbar{padding:24px 20px 14px}}
-@media(min-width:768px){.card-grid{grid-template-columns:repeat(4,1fr)}.scroll-area{max-width:600px;margin-left:auto;margin-right:auto}.bottom-nav{justify-content:center}.nav-btn{max-width:100px}}
+/* ── TOAST ── */
+.toast {
+  position: fixed; bottom: calc(var(--nav) + 14px); left: 50%;
+  transform: translateX(-50%) translateY(16px);
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 50px; padding: 9px 18px; font-size: .8rem;
+  font-weight: 700; color: var(--text); z-index: 300;
+  opacity: 0; transition: all .28s cubic-bezier(.34,1.56,.64,1);
+  white-space: nowrap; box-shadow: 0 8px 32px rgba(0,0,0,.4);
+  display: flex; align-items: center; gap: 7px; pointer-events: none;
+}
+.toast svg { width: 14px; height: 14px; }
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.toast.ok    { color: var(--green); border-color: rgba(0,229,160,.3); }
+.toast.err   { color: var(--red);   border-color: rgba(255,77,106,.3); }
+.toast.amber { color: var(--amber); border-color: rgba(255,181,71,.3); }
+
+/* ── SECTION HEADER ── */
+.sec-hdr { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.sec-hdr h2 { font-size: .95rem; font-weight: 700; color: var(--text2); letter-spacing: -.1px; }
+.sec-title { font-size: .62rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--green); margin-bottom: 8px; padding-left: 2px; }
+
+/* ── DIVIDER ── */
+hr { border: none; border-top: 1px solid var(--border); margin: 14px 0; }
+
+/* ── CALENDAR MINI ── */
+.cal-wrap { margin-bottom: 14px; }
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.cal-day-hdr { text-align: center; font-size: .62rem; color: var(--text3); padding: 4px 0; font-weight: 700; text-transform: uppercase; }
+.cal-day {
+  aspect-ratio: 1; display: flex; align-items: center; justify-content: center;
+  border-radius: 8px; font-size: .78rem; font-family: var(--mono);
+  color: var(--text3); cursor: pointer; transition: all .12s; position: relative;
+}
+.cal-day.today { color: var(--text); font-weight: 700; }
+.cal-day.has-shift { background: rgba(0,229,160,.12); color: var(--green); font-weight: 600; }
+.cal-day.has-shift::after {
+  content: ''; position: absolute; bottom: 3px; left: 50%;
+  transform: translateX(-50%); width: 4px; height: 4px;
+  background: var(--green); border-radius: 50%;
+}
+.cal-day.today.has-shift { background: rgba(0,229,160,.2); }
+.cal-day:hover:not(.empty-day) { background: var(--bg2); color: var(--text); }
+.cal-day.empty-day { cursor: default; }
+.cal-day.selected { background: var(--green); color: var(--bg); font-weight: 700; }
+
+/* ── MISC ── */
+.badge { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 20px; font-size: .62rem; font-weight: 700; text-transform: uppercase; letter-spacing: .3px; }
+.badge-green { background: rgba(0,229,160,.12); color: var(--green); }
+.badge-blue  { background: rgba(77,143,255,.12); color: var(--blue); }
+.badge-amber { background: rgba(255,181,71,.12); color: var(--amber); }
+.badge-red   { background: rgba(255,77,106,.12); color: var(--red); }
+.spinner { width: 18px; height: 18px; border: 2px solid var(--border); border-top-color: var(--green); border-radius: 50%; animation: spin .6s linear infinite; flex-shrink: 0; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.divider-label { display: flex; align-items: center; gap: 8px; margin: 14px 0; }
+.divider-label span { font-size: .68rem; color: var(--text3); text-transform: uppercase; letter-spacing: .8px; font-weight: 700; white-space: nowrap; }
+.divider-label::before, .divider-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
 </style>
 </head>
 <body>
-<div id="app">
 
-<!-- SVG SPRITE -->
-<svg xmlns="http://www.w3.org/2000/svg" style="display:none">
-  <symbol id="i-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H5a1 1 0 01-1-1V9.5z"/><path d="M9 21V12h6v9"/></symbol>
-  <symbol id="i-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></symbol>
-  <symbol id="i-list" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></symbol>
-  <symbol id="i-bar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M18 20V10M12 20V4M6 20v-6"/></symbol>
-  <symbol id="i-cog" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></symbol>
-  <symbol id="i-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></symbol>
-  <symbol id="i-cal" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></symbol>
-  <symbol id="i-euro" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M17 7.5A7 7 0 1017 16.5M3 10h10M3 14h10"/></symbol>
-  <symbol id="i-wallet" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M20 7H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z"/><path d="M16 3l-12 4"/><circle cx="17" cy="13" r="1" fill="currentColor" stroke="none"/></symbol>
-  <symbol id="i-edit" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></symbol>
-  <symbol id="i-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6M10 11v6M14 11v6"/></symbol>
-  <symbol id="i-save" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></symbol>
-  <symbol id="i-pin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M21 10c0 6-9 13-9 13S3 16 3 10a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></symbol>
-  <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></symbol>
-  <symbol id="i-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><path d="M12 9v4M12 17h.01"/></symbol>
-  <symbol id="i-scale" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 3v18M5 8l7-5 7 5M3 20h18M6 12H3l3-4 3 4H6zM18 12h-3l3-4 3 4h-3z"/></symbol>
-  <symbol id="i-dl" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></symbol>
-  <symbol id="i-file" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></symbol>
-  <symbol id="i-phone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/></symbol>
-  <symbol id="i-chevl" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></symbol>
-  <symbol id="i-chevr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 18l6-6-6-6"/></symbol>
-  <symbol id="i-coffee" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M18 8h1a4 4 0 010 8h-1M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8zM6 1v3M10 1v3M14 1v3"/></symbol>
-  <symbol id="i-info" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></symbol>
+<!-- SVG ICONS SPRITE -->
+<svg style="display:none" xmlns="http://www.w3.org/2000/svg">
+  <symbol id="i-home"  viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H5a1 1 0 01-1-1V9.5z"/><path d="M9 21V12h6v9"/></symbol>
+  <symbol id="i-plus"  viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></symbol>
+  <symbol id="i-upload" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></symbol>
+  <symbol id="i-history" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></symbol>
+  <symbol id="i-clock"   viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></symbol>
+  <symbol id="i-cal"     viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></symbol>
+  <symbol id="i-edit"    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></symbol>
+  <symbol id="i-trash"   viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6M10 11v6M14 11v6"/></symbol>
+  <symbol id="i-check"   viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></symbol>
+  <symbol id="i-warn"    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><path d="M12 9v4M12 17h.01"/></symbol>
+  <symbol id="i-x"       viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></symbol>
+  <symbol id="i-chevl"   viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></symbol>
+  <symbol id="i-chevr"   viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 18l6-6-6-6"/></symbol>
+  <symbol id="i-pin"     viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M21 10c0 6-9 13-9 13S3 16 3 10a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></symbol>
+  <symbol id="i-doc"     viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></symbol>
+  <symbol id="i-img"     viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></symbol>
+  <symbol id="i-sparkle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6L12 2z"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M1 4v6h6"/><path d="M23 20v-6h-6"/><path d="M20.49 9A9 9 0 005.64 5.64L1 10M23 14l-4.64 4.36A9 9 0 013.51 15"/></symbol>
+  <symbol id="i-euro"    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M17 7.5A7 7 0 1017 16.5M3 10h10M3 14h10"/></symbol>
+  <symbol id="i-bars"    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M18 20V10M12 20V4M6 20v-6"/></symbol>
+  <symbol id="i-save"    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></symbol>
 </svg>
 
-<!-- ════ DASHBOARD ════ -->
-<div id="screen-dashboard" class="screen active">
+<div id="root">
+
+<!-- ══════════ PAGE: DASHBOARD ══════════ -->
+<div id="page-home" class="page active">
   <div class="topbar">
-    <div class="topbar-title">
-      <span class="greeting">Bem-vindo de volta</span>
-      <h1>Dashboard</h1>
+    <div class="topbar-left">
+      <span class="topbar-eyebrow">ShiftTrack</span>
+      <h1 class="topbar-title">Dashboard</h1>
     </div>
-    <div class="topbar-logo">ST</div>
+    <div class="topbar-badge" id="dash-month-badge">—</div>
   </div>
-  <div class="scroll-area">
-    <div class="month-selector">
-      <button class="month-nav" id="dash-prev-month"><svg width="16" height="16"><use href="#i-chevl"/></svg></button>
-      <span class="month-label" id="dash-month-label">—</span>
-      <button class="month-nav" id="dash-next-month"><svg width="16" height="16"><use href="#i-chevr"/></svg></button>
-    </div>
-    <div class="card-grid">
-      <div class="stat-card c1">
-        <div class="stat-icon"><svg width="26" height="26"><use href="#i-clock"/></svg></div>
-        <div class="stat-label">Total Horas</div>
-        <div class="stat-value accent" id="stat-total-hours">0h</div>
-        <div class="stat-sub" id="stat-avg-hours">Média: 0h/turno</div>
+  <div class="scroll">
+
+    <div class="stats" id="dash-stats">
+      <div class="stat">
+        <div class="stat-label">Horas reg.</div>
+        <div class="stat-val green" id="ds-hours">0h00</div>
+        <div class="stat-sub" id="ds-days">0 turnos</div>
       </div>
-      <div class="stat-card c4">
-        <div class="stat-icon"><svg width="26" height="26"><use href="#i-cal"/></svg></div>
-        <div class="stat-label">Dias Trab.</div>
-        <div class="stat-value yellow" id="stat-workdays">0</div>
-        <div class="stat-sub" id="stat-shifts-count">0 turnos</div>
+      <div class="stat">
+        <div class="stat-label">Líquido est.</div>
+        <div class="stat-val blue" id="ds-net">€0.00</div>
+        <div class="stat-sub" id="ds-gross">Bruto: €0.00</div>
       </div>
-      <div class="stat-card c2">
-        <div class="stat-icon"><svg width="26" height="26"><use href="#i-euro"/></svg></div>
-        <div class="stat-label">Bruto Est.</div>
-        <div class="stat-value blue" id="stat-gross">€0</div>
-        <div class="stat-sub" id="stat-rate-info">€0/hora</div>
+      <div class="stat">
+        <div class="stat-label">Vencimento</div>
+        <div class="stat-val" id="ds-wage">€0.00</div>
+        <div class="stat-sub" id="ds-rate">€5.31/hora</div>
       </div>
-      <div class="stat-card c3">
-        <div class="stat-icon"><svg width="26" height="26"><use href="#i-wallet"/></svg></div>
-        <div class="stat-label">Líquido Est.</div>
-        <div class="stat-value orange" id="stat-net">€0</div>
-        <div class="stat-sub" id="stat-tax-info">Imp: 0%</div>
+      <div class="stat">
+        <div class="stat-label">Sub. Refeição</div>
+        <div class="stat-val amber" id="ds-meal">€0.00</div>
+        <div class="stat-sub" id="ds-meal-days">0 dias × €0.60</div>
       </div>
     </div>
-    <div class="chart-wrap">
-      <div class="chart-title">Horas por dia</div>
-      <div class="chart-container"><canvas id="hours-chart"></canvas></div>
+
+    <div class="month-sel">
+      <button class="month-nav" id="dash-prev"><svg width="14" height="14"><use href="#i-chevl"/></svg></button>
+      <span class="month-lbl" id="dash-month-lbl">—</span>
+      <button class="month-nav" id="dash-next"><svg width="14" height="14"><use href="#i-chevr"/></svg></button>
     </div>
-    <div class="section-header">
+
+    <!-- Mini calendar -->
+    <div class="cal-wrap card" id="dash-cal"></div>
+
+    <div class="sec-hdr" style="margin-top:6px;">
       <h2>Turnos recentes</h2>
-      <button class="see-all" onclick="App.navigate('shifts')">Ver todos →</button>
+      <button class="btn btn-sm btn-secondary" style="width:auto;" onclick="navigate('add')">
+        <svg width="13" height="13"><use href="#i-plus"/></svg> Adicionar
+      </button>
     </div>
-    <div id="recent-shifts-list">
-      <div class="empty-state">
-        <div class="empty-icon"><svg width="52" height="52"><use href="#i-clock"/></svg></div>
-        <div class="empty-title">Sem turnos este mês</div>
-        <div class="empty-sub">Adiciona o teu primeiro turno<br>no separador Adicionar</div>
-      </div>
-    </div>
+    <div id="dash-shifts"></div>
+
   </div>
 </div>
 
-<!-- ════ ADD SHIFT ════ -->
-<div id="screen-add" class="screen">
+<!-- ══════════ PAGE: ADD SHIFT ══════════ -->
+<div id="page-add" class="page">
   <div class="topbar">
-    <div class="topbar-title">
-      <span class="greeting">Registar trabalho</span>
-      <h1>Novo Turno</h1>
+    <div class="topbar-left">
+      <span class="topbar-eyebrow">Registo</span>
+      <h1 class="topbar-title">Novo Turno</h1>
     </div>
-    <div class="topbar-logo">ST</div>
   </div>
-  <div class="scroll-area">
-    <div class="card">
-      <div class="form-group">
-        <label class="form-label">Data</label>
-        <input type="date" class="form-control" id="shift-date">
-      </div>
+  <div class="scroll">
+
+    <!-- Calendar picker -->
+    <div class="sec-title">Selecionar data</div>
+    <div class="cal-wrap card" id="add-cal"></div>
+
+    <div class="card" style="margin-top:4px;">
       <div class="form-row">
         <div class="form-group">
           <label class="form-label">Entrada</label>
@@ -316,860 +524,1114 @@ textarea.form-control{resize:none;min-height:80px;line-height:1.5}
         <label class="form-label">Pausa (minutos)</label>
         <input type="number" class="form-control" id="shift-break" placeholder="0" min="0" max="480">
       </div>
-      <div class="form-calc-preview">
-        <span class="form-calc-label">
-          <svg width="16" height="16"><use href="#i-clock"/></svg>
-          Horas calculadas
+      <div class="form-preview">
+        <span class="form-preview-label">
+          <svg width="14" height="14"><use href="#i-clock"/></svg>
+          Duração calculada
         </span>
-        <span class="form-calc-value" id="calc-hours">— h</span>
+        <span class="form-preview-val" id="shift-preview">— h</span>
       </div>
       <div class="form-group">
         <label class="form-label">Cliente / Empresa</label>
-        <input type="text" class="form-control" id="shift-client" placeholder="Nome do cliente ou empresa">
+        <input type="text" class="form-control" id="shift-client" placeholder="Adecco, Randstad...">
       </div>
       <div class="form-group">
-        <label class="form-label">Local de trabalho</label>
-        <input type="text" class="form-control" id="shift-location" placeholder="Endereço ou nome do local">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Notas</label>
-        <textarea class="form-control" id="shift-notes" placeholder="Observações, tarefas realizadas..."></textarea>
+        <label class="form-label">Local</label>
+        <input type="text" class="form-control" id="shift-location" placeholder="Armazém, Escritório...">
       </div>
       <button class="btn btn-primary" id="btn-save-shift">
-        <svg width="18" height="18"><use href="#i-save"/></svg>
+        <svg><use href="#i-save"/></svg>
         Guardar Turno
       </button>
     </div>
+
+    <!-- Shifts of selected day -->
+    <div id="add-day-shifts"></div>
   </div>
 </div>
 
-<!-- ════ HISTORY ════ -->
-<div id="screen-shifts" class="screen">
+<!-- ══════════ PAGE: UPLOAD ══════════ -->
+<div id="page-upload" class="page">
   <div class="topbar">
-    <div class="topbar-title">
-      <span class="greeting">Registo completo</span>
-      <h1>Histórico</h1>
+    <div class="topbar-left">
+      <span class="topbar-eyebrow">Análise</span>
+      <h1 class="topbar-title">Upload Recibo</h1>
     </div>
-    <div class="topbar-logo">ST</div>
   </div>
-  <div class="scroll-area">
-    <div class="month-selector">
-      <button class="month-nav" id="hist-prev-month"><svg width="16" height="16"><use href="#i-chevl"/></svg></button>
-      <span class="month-label" id="hist-month-label">—</span>
-      <button class="month-nav" id="hist-next-month"><svg width="16" height="16"><use href="#i-chevr"/></svg></button>
-    </div>
-    <div id="shifts-list">
-      <div class="empty-state">
-        <div class="empty-icon"><svg width="52" height="52"><use href="#i-list"/></svg></div>
-        <div class="empty-title">Sem turnos registados</div>
-        <div class="empty-sub">Os teus turnos aparecerão aqui<br>após serem adicionados</div>
+  <div class="scroll">
+
+    <div class="card card-glow" style="margin-bottom:14px;">
+      <div class="sec-title">Mês a analisar</div>
+      <div class="month-sel" style="margin-bottom:0;">
+        <button class="month-nav" id="up-prev"><svg width="14" height="14"><use href="#i-chevl"/></svg></button>
+        <span class="month-lbl" id="up-month-lbl">—</span>
+        <button class="month-nav" id="up-next"><svg width="14" height="14"><use href="#i-chevr"/></svg></button>
       </div>
     </div>
+
+    <!-- Upload zone -->
+    <div class="upload-zone" id="upload-zone">
+      <svg><use href="#i-upload"/></svg>
+      <h3>Carregar recibo</h3>
+      <p>PDF ou imagem (JPG, PNG)<br>Arrasta ou clica para selecionar</p>
+      <input type="file" id="file-input" accept=".pdf,.jpg,.jpeg,.png" style="display:none">
+    </div>
+    <div id="upload-filename" style="text-align:center;font-size:.75rem;color:var(--text3);margin-top:8px;"></div>
+
+    <!-- Extraction progress -->
+    <div id="extract-status" style="display:none;margin-top:14px;">
+      <div class="progress-wrap"><div class="progress-bar" id="extract-progress" style="width:0%"></div></div>
+      <div id="extract-steps"></div>
+    </div>
+
+    <!-- Manual entry fallback -->
+    <div id="manual-section" style="display:none;margin-top:14px;">
+      <div class="divider-label"><span>Ou introduz manualmente</span></div>
+      <div class="card">
+        <div class="sec-title">Dados do recibo</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Horas pagas</label>
+            <input type="number" class="form-control" id="man-hours" placeholder="7.30" step="0.01">
+          </div>
+          <div class="form-group">
+            <label class="form-label">€/hora</label>
+            <input type="number" class="form-control" id="man-rate" placeholder="5.31" step="0.01" value="5.31">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Vencimento (€)</label>
+            <input type="number" class="form-control" id="man-venc" placeholder="0.00" step="0.01">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Sub. Refeição (€)</label>
+            <input type="number" class="form-control" id="man-meal" placeholder="0.00" step="0.01">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Sub. Natal (€)</label>
+            <input type="number" class="form-control" id="man-natal" placeholder="0.00" step="0.01">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Caducidade (€)</label>
+            <input type="number" class="form-control" id="man-caduc" placeholder="0.00" step="0.01">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Sub. Férias (€)</label>
+            <input type="number" class="form-control" id="man-ferias" placeholder="0.00" step="0.01">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Férias não gozadas (€)</label>
+            <input type="number" class="form-control" id="man-ferias-ng" placeholder="0.00" step="0.01">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Total Líquido (€)</label>
+            <input type="number" class="form-control" id="man-liquido" placeholder="0.00" step="0.01">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Cartão Refeição (€)</label>
+            <input type="number" class="form-control" id="man-cartao" placeholder="0.00" step="0.01">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" id="btn-analyse" style="margin-top:6px;">
+      <svg><use href="#i-sparkle"/></svg>
+      Analisar Recibo
+    </button>
+    <button class="btn btn-secondary" id="btn-manual-toggle" style="margin-top:8px;">
+      Introduzir dados manualmente
+    </button>
+
   </div>
 </div>
 
-<!-- ════ REPORTS ════ -->
-<div id="screen-reports" class="screen">
+<!-- ══════════ PAGE: ANALYSIS ══════════ -->
+<div id="page-analysis" class="page">
   <div class="topbar">
-    <div class="topbar-title">
-      <span class="greeting">Análise mensal</span>
-      <h1>Relatórios</h1>
+    <div class="topbar-left">
+      <span class="topbar-eyebrow">Resultado</span>
+      <h1 class="topbar-title">Análise</h1>
     </div>
-    <div class="topbar-logo">ST</div>
+    <div class="topbar-badge" id="analysis-month-badge">—</div>
   </div>
-  <div class="scroll-area">
-    <div class="month-selector">
-      <button class="month-nav" id="rep-prev-month"><svg width="16" height="16"><use href="#i-chevl"/></svg></button>
-      <span class="month-label" id="rep-month-label">—</span>
-      <button class="month-nav" id="rep-next-month"><svg width="16" height="16"><use href="#i-chevr"/></svg></button>
+  <div class="scroll" id="analysis-content">
+    <div class="empty">
+      <svg><use href="#i-sparkle"/></svg>
+      <h3>Sem análise</h3>
+      <p>Faz upload de um recibo<br>para ver a comparação aqui</p>
     </div>
-    <div class="report-summary-card">
-      <div class="report-month-title" id="rep-title">—</div>
-      <div class="report-meta" id="rep-meta">—</div>
-      <div class="report-stats">
-        <div class="report-stat"><span class="report-stat-value" id="rep-hours">0h</span><span class="report-stat-label">Total Horas</span></div>
-        <div class="report-stat"><span class="report-stat-value" id="rep-gross">€0</span><span class="report-stat-label">Bruto</span></div>
-        <div class="report-stat"><span class="report-stat-value" id="rep-net">€0</span><span class="report-stat-label">Líquido</span></div>
-      </div>
-    </div>
-    <div class="chart-wrap">
-      <div class="chart-title">Horas por dia</div>
-      <div class="chart-container"><canvas id="report-chart"></canvas></div>
-    </div>
-    <div class="card card-accent">
-      <h3 style="margin-bottom:4px;display:flex;align-items:center;gap:8px;">
-        <svg width="17" height="17"><use href="#i-scale"/></svg>
-        Comparar com Recibo Adecco
-      </h3>
-      <p style="font-size:.75rem;color:var(--text3);margin-bottom:14px;">Introduz os valores do teu recibo para verificar se está correto</p>
-
-      <div class="settings-title" style="margin-bottom:8px;">
-        <svg width="11" height="11"><use href="#i-list"/></svg>
-        Dados do recibo
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">Horas pagas (Quant.)</label>
-          <input type="number" class="form-control" id="comp-paid-hours" placeholder="0.00" step="0.25">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Valor hora recibo (€)</label>
-          <input type="number" class="form-control" id="comp-rate" placeholder="5.31" step="0.01" value="5.31">
-        </div>
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">Sub. Refeição/hora (€)</label>
-          <input type="number" class="form-control" id="comp-meal-rate" placeholder="0.60" step="0.01" value="0.60">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Dias de refeição pagos</label>
-          <input type="number" class="form-control" id="comp-meal-days" placeholder="0" step="1">
-        </div>
-      </div>
-
-      <div class="settings-title" style="margin-bottom:8px;margin-top:4px;">
-        <svg width="11" height="11"><use href="#i-euro"/></svg>
-        Verbas de rescisão (se aplicável)
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">Sub. Natal (€)</label>
-          <input type="number" class="form-control" id="comp-natal" placeholder="0.00" step="0.01">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Caducidade (€)</label>
-          <input type="number" class="form-control" id="comp-caducidade" placeholder="0.00" step="0.01">
-        </div>
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">Sub. Férias (€)</label>
-          <input type="number" class="form-control" id="comp-ferias" placeholder="0.00" step="0.01">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Férias não gozadas (€)</label>
-          <input type="number" class="form-control" id="comp-ferias-ng" placeholder="0.00" step="0.01">
-        </div>
-      </div>
-
-      <div class="settings-title" style="margin-bottom:8px;margin-top:4px;">
-        <svg width="11" height="11"><use href="#i-wallet"/></svg>
-        Total recebido
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">Total líquido recibo (€)</label>
-          <input type="number" class="form-control" id="comp-paid-amount" placeholder="0.00" step="0.01">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Cartão refeição (€)</label>
-          <input type="number" class="form-control" id="comp-card-amount" placeholder="0.00" step="0.01">
-        </div>
-      </div>
-
-      <button class="btn btn-secondary" id="btn-compare" style="margin-bottom:14px;">
-        <svg width="18" height="18"><use href="#i-scale"/></svg>
-        Analisar Recibo
-      </button>
-      <div id="comparison-result" style="display:none;"></div>
-    </div>
-    <div class="section-header" style="margin-top:4px;"><h2>Exportar relatório</h2></div>
-    <div class="export-btn-row">
-      <button class="btn-export csv" id="btn-export-csv">
-        <svg><use href="#i-file"/></svg>
-        Exportar CSV
-      </button>
-      <button class="btn-export pdf" id="btn-export-pdf">
-        <svg><use href="#i-dl"/></svg>
-        Exportar PDF
-      </button>
-    </div>
-    <div class="section-header" style="margin-top:16px;"><h2>Turnos do mês</h2></div>
-    <div id="report-shifts-list"></div>
   </div>
 </div>
 
-<!-- ════ SETTINGS ════ -->
-<div id="screen-settings" class="screen">
+<!-- ══════════ PAGE: HISTORY ══════════ -->
+<div id="page-history" class="page">
   <div class="topbar">
-    <div class="topbar-title">
-      <span class="greeting">Personalização</span>
-      <h1>Definições</h1>
+    <div class="topbar-left">
+      <span class="topbar-eyebrow">Arquivo</span>
+      <h1 class="topbar-title">Histórico</h1>
     </div>
-    <div class="topbar-logo">ST</div>
   </div>
-  <div class="scroll-area">
-    <div class="settings-section">
-      <div class="settings-title">
-        <svg width="13" height="13"><use href="#i-euro"/></svg>
-        Adecco — Taxas base
-      </div>
-      <div class="settings-card">
-        <div class="settings-item">
-          <div class="settings-item-info">
-            <div class="settings-item-label">Taxa horária (€/hora)</div>
-            <div class="settings-item-sub">Vencimento base — ex: €5.31</div>
-          </div>
-          <div class="settings-item-control">
-            <input type="number" class="form-control" id="set-hourly-rate" placeholder="5.31" step="0.01" min="0">
-          </div>
-        </div>
-        <div class="settings-item">
-          <div class="settings-item-info">
-            <div class="settings-item-label">Sub. Refeição (€/dia)</div>
-            <div class="settings-item-sub">Valor por dia/turno trabalhado</div>
-          </div>
-          <div class="settings-item-control">
-            <input type="number" class="form-control" id="set-meal-rate" placeholder="0.60" step="0.01" min="0">
-          </div>
-        </div>
-        <div class="settings-item">
-          <div class="settings-item-info">
-            <div class="settings-item-label">Segurança Social (%)</div>
-            <div class="settings-item-sub">Desconto SS trabalhador — 11%</div>
-          </div>
-          <div class="settings-item-control">
-            <input type="number" class="form-control" id="set-tax-rate" placeholder="11" step="0.5" min="0" max="100">
-          </div>
-        </div>
-        <div class="settings-item">
-          <div class="settings-item-info">
-            <div class="settings-item-label">IRS retido (%)</div>
-            <div class="settings-item-sub">Normalmente 0% para salários baixos</div>
-          </div>
-          <div class="settings-item-control">
-            <input type="number" class="form-control" id="set-irs-rate" placeholder="0" step="0.5" min="0" max="100">
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="card card-accent">
-      <div class="chart-title" style="margin-bottom:12px;">Estimativa este mês (Adecco)</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px;">
-        <div class="comp-card">
-          <div class="comp-label">Vencimento</div>
-          <div class="comp-value" style="color:var(--accent);font-size:1rem;" id="set-preview-gross">€0.00</div>
-        </div>
-        <div class="comp-card">
-          <div class="comp-label">Sub. Ref.</div>
-          <div class="comp-value" style="color:var(--accent4);font-size:1rem;" id="set-preview-meal">€0.00</div>
-        </div>
-        <div class="comp-card">
-          <div class="comp-label">Líquido</div>
-          <div class="comp-value" style="color:var(--accent2);font-size:1rem;" id="set-preview-net">€0.00</div>
-        </div>
-      </div>
-      <div style="background:var(--bg3);border-radius:10px;padding:12px;font-size:.78rem;color:var(--text3);display:flex;flex-direction:column;gap:5px;">
-        <div style="display:flex;justify-content:space-between;">
-          <span>Horas trabalhadas</span>
-          <strong id="set-preview-hours" style="color:var(--text2);">0h</strong>
-        </div>
-        <div style="display:flex;justify-content:space-between;">
-          <span>Dias trabalhados</span>
-          <strong id="set-preview-days" style="color:var(--text2);">0</strong>
-        </div>
-        <div style="display:flex;justify-content:space-between;">
-          <span>Desconto SS (11%)</span>
-          <strong id="set-preview-ss" style="color:var(--danger);">-€0.00</strong>
-        </div>
-        <div style="border-top:1px solid var(--border);margin-top:4px;padding-top:6px;display:flex;justify-content:space-between;">
-          <span>Total abonos (bruto)</span>
-          <strong id="set-preview-total" style="color:var(--text);">€0.00</strong>
-        </div>
-      </div>
-    </div>
-    <div class="settings-section">
-      <div class="settings-title">
-        <svg width="13" height="13"><use href="#i-info"/></svg>
-        Aplicação
-      </div>
-      <div class="settings-card">
-        <div class="settings-item">
-          <div class="settings-item-info">
-            <div class="settings-item-label">Versão</div>
-            <div class="settings-item-sub">ShiftTrack PWA</div>
-          </div>
-          <span class="badge badge-accent">v1.2</span>
-        </div>
-        <div class="settings-item">
-          <div class="settings-item-info">
-            <div class="settings-item-label">Estado offline</div>
-            <div class="settings-item-sub">Service Worker</div>
-          </div>
-          <span class="badge badge-blue" id="sw-status">Inativo</span>
-        </div>
-      </div>
-    </div>
-    <div class="settings-section">
-      <div class="settings-title" style="color:var(--danger);">
-        <svg width="13" height="13"><use href="#i-trash"/></svg>
-        Dados
-      </div>
-      <div class="settings-card">
-        <div class="settings-item">
-          <div class="settings-item-info">
-            <div class="settings-item-label" style="color:var(--danger)">Apagar todos os dados</div>
-            <div class="settings-item-sub">Esta ação é irreversível</div>
-          </div>
-          <button class="btn btn-danger btn-sm" id="btn-clear-data">Apagar</button>
-        </div>
-      </div>
-    </div>
+  <div class="scroll">
+    <div id="history-list"></div>
   </div>
 </div>
 
-<!-- ════ BOTTOM NAV ════ -->
-<nav class="bottom-nav">
-  <button class="nav-btn active" data-screen="dashboard">
-    <svg class="nav-icon" width="22" height="22"><use href="#i-home"/></svg>
-    <span class="nav-label">Início</span>
+<!-- ══════════ BOTTOM NAV ══════════ -->
+<nav class="nav">
+  <button class="nav-btn active" data-page="home">
+    <svg><use href="#i-home"/></svg>
+    <span>Início</span>
   </button>
-  <button class="nav-btn" data-screen="add">
-    <svg class="nav-icon" width="22" height="22"><use href="#i-plus"/></svg>
-    <span class="nav-label">Adicionar</span>
+  <button class="nav-btn" data-page="add">
+    <svg><use href="#i-plus"/></svg>
+    <span>Registo</span>
   </button>
-  <button class="nav-btn" data-screen="shifts">
-    <svg class="nav-icon" width="22" height="22"><use href="#i-list"/></svg>
-    <span class="nav-label">Histórico</span>
+  <button class="nav-btn" data-page="upload">
+    <svg><use href="#i-upload"/></svg>
+    <span>Recibo</span>
   </button>
-  <button class="nav-btn" data-screen="reports">
-    <svg class="nav-icon" width="22" height="22"><use href="#i-bar"/></svg>
-    <span class="nav-label">Relatórios</span>
+  <button class="nav-btn" data-page="analysis">
+    <svg><use href="#i-bars"/></svg>
+    <span>Análise</span>
   </button>
-  <button class="nav-btn" data-screen="settings">
-    <svg class="nav-icon" width="22" height="22"><use href="#i-cog"/></svg>
-    <span class="nav-label">Definições</span>
+  <button class="nav-btn" data-page="history">
+    <svg><use href="#i-history"/></svg>
+    <span>Histórico</span>
   </button>
 </nav>
-</div>
 
-<!-- ════ EDIT MODAL ════ -->
+<!-- Edit Modal -->
 <div class="modal-overlay" id="edit-modal">
   <div class="modal">
     <div class="modal-handle"></div>
-    <div class="modal-title">
-      <svg width="20" height="20"><use href="#i-edit"/></svg>
-      Editar Turno
-    </div>
-    <div class="form-group">
-      <label class="form-label">Data</label>
-      <input type="date" class="form-control" id="edit-date">
-    </div>
+    <div class="modal-title"><svg><use href="#i-edit"/></svg> Editar Turno</div>
     <div class="form-row">
-      <div class="form-group">
-        <label class="form-label">Entrada</label>
-        <input type="time" class="form-control" id="edit-start">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Saída</label>
-        <input type="time" class="form-control" id="edit-end">
-      </div>
+      <div class="form-group"><label class="form-label">Entrada</label><input type="time" class="form-control" id="edit-start"></div>
+      <div class="form-group"><label class="form-label">Saída</label><input type="time" class="form-control" id="edit-end"></div>
     </div>
-    <div class="form-group">
-      <label class="form-label">Pausa (min)</label>
-      <input type="number" class="form-control" id="edit-break" min="0">
+    <div class="form-group"><label class="form-label">Pausa (min)</label><input type="number" class="form-control" id="edit-break" min="0"></div>
+    <div class="form-preview">
+      <span class="form-preview-label"><svg width="14" height="14"><use href="#i-clock"/></svg> Duração</span>
+      <span class="form-preview-val" id="edit-preview">— h</span>
     </div>
-    <div class="form-calc-preview">
-      <span class="form-calc-label">
-        <svg width="16" height="16"><use href="#i-clock"/></svg>
-        Horas calculadas
-      </span>
-      <span class="form-calc-value" id="edit-calc-hours">— h</span>
-    </div>
-    <div class="form-group">
-      <label class="form-label">Cliente</label>
-      <input type="text" class="form-control" id="edit-client">
-    </div>
-    <div class="form-group">
-      <label class="form-label">Local</label>
-      <input type="text" class="form-control" id="edit-location">
-    </div>
-    <div class="form-group">
-      <label class="form-label">Notas</label>
-      <textarea class="form-control" id="edit-notes"></textarea>
-    </div>
+    <div class="form-group"><label class="form-label">Cliente</label><input type="text" class="form-control" id="edit-client"></div>
+    <div class="form-group"><label class="form-label">Local</label><input type="text" class="form-control" id="edit-location"></div>
     <div class="modal-footer">
-      <button class="btn btn-secondary" id="btn-cancel-edit">Cancelar</button>
-      <button class="btn btn-primary" id="btn-save-edit" style="width:auto;">
-        <svg width="18" height="18"><use href="#i-save"/></svg>
-        Guardar
-      </button>
+      <button class="btn btn-secondary" id="edit-cancel">Cancelar</button>
+      <button class="btn btn-primary" id="edit-save" style="width:auto;"><svg><use href="#i-save"/></svg>Guardar</button>
     </div>
   </div>
 </div>
 
-<!-- ════ DELETE MODAL ════ -->
-<div class="modal-overlay" id="delete-modal">
+<!-- Delete Modal -->
+<div class="modal-overlay" id="del-modal">
   <div class="modal" style="text-align:center;">
     <div class="modal-handle"></div>
-    <div class="modal-del-icon"><svg width="48" height="48"><use href="#i-trash"/></svg></div>
+    <div style="width:48px;height:48px;margin:0 auto 12px;color:var(--red);"><svg width="48" height="48"><use href="#i-trash"/></svg></div>
     <div class="modal-title" style="justify-content:center;margin-bottom:8px;">Apagar turno?</div>
     <p style="font-size:.85rem;color:var(--text2);margin-bottom:20px;">Esta ação não pode ser desfeita.</p>
     <div class="modal-footer">
-      <button class="btn btn-secondary" id="btn-cancel-delete">Cancelar</button>
-      <button class="btn btn-danger" id="btn-confirm-delete" style="width:auto;">
-        <svg width="16" height="16"><use href="#i-trash"/></svg>
-        Apagar
-      </button>
+      <button class="btn btn-secondary" id="del-cancel">Cancelar</button>
+      <button class="btn btn-danger" id="del-confirm" style="width:auto;"><svg width="16" height="16"><use href="#i-trash"/></svg>Apagar</button>
     </div>
   </div>
 </div>
 
-<!-- Toast -->
+</div><!-- /#root -->
 <div class="toast" id="toast"></div>
 
-<!-- Install Banner -->
-<div class="install-banner" id="install-banner">
-  <div class="install-banner-icon"><svg width="34" height="34"><use href="#i-phone"/></svg></div>
-  <div class="install-info">
-    <strong>Instalar ShiftTrack</strong>
-    <span>Acesso rápido no teu telemóvel</span>
-  </div>
-  <button class="btn btn-primary btn-sm" id="btn-install">Instalar</button>
-  <button class="btn btn-secondary btn-sm" id="btn-dismiss-install" style="width:auto;padding:8px 10px;">
-    <svg width="14" height="14"><use href="#i-chevr"/></svg>
-  </button>
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-// ═══ CORE ═══
-const DB_NAME='shifttrack-db',DB_VER=2;let db=null;
-function initDB(){return new Promise((res,rej)=>{const r=indexedDB.open(DB_NAME,DB_VER);r.onupgradeneeded=e=>{const d=e.target.result;if(!d.objectStoreNames.contains('shifts')){const s=d.createObjectStore('shifts',{keyPath:'id',autoIncrement:true});s.createIndex('date','date',{unique:false});s.createIndex('yearMonth','yearMonth',{unique:false})}if(!d.objectStoreNames.contains('settings'))d.createObjectStore('settings',{keyPath:'key'})};r.onsuccess=e=>{db=e.target.result;res(db)};r.onerror=()=>rej(r.error)})}
-const DB={
-  addShift(s){return new Promise((res,rej)=>{const t=db.transaction('shifts','readwrite'),r=t.objectStore('shifts').add(s);r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)})},
-  updateShift(s){return new Promise((res,rej)=>{const t=db.transaction('shifts','readwrite'),r=t.objectStore('shifts').put(s);r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)})},
-  deleteShift(id){return new Promise((res,rej)=>{const t=db.transaction('shifts','readwrite'),r=t.objectStore('shifts').delete(id);r.onsuccess=()=>res();r.onerror=()=>rej(r.error)})},
-  getAllShifts(){return new Promise((res,rej)=>{const t=db.transaction('shifts','readonly'),r=t.objectStore('shifts').getAll();r.onsuccess=()=>res(r.result||[]);r.onerror=()=>rej(r.error)})},
-  getShiftsByMonth(ym){return new Promise((res,rej)=>{const t=db.transaction('shifts','readonly'),r=t.objectStore('shifts').index('yearMonth').getAll(ym);r.onsuccess=()=>res(r.result||[]);r.onerror=()=>rej(r.error)})},
-  getSetting(k){return new Promise(res=>{const t=db.transaction('settings','readonly'),r=t.objectStore('settings').get(k);r.onsuccess=()=>res(r.result?r.result.value:null);r.onerror=()=>res(null)})},
-  setSetting(k,v){return new Promise((res,rej)=>{const t=db.transaction('settings','readwrite'),r=t.objectStore('settings').put({key:k,value:v});r.onsuccess=()=>res();r.onerror=()=>rej(r.error)})},
-  clearAll(){return new Promise((res,rej)=>{const t=db.transaction(['shifts','settings'],'readwrite');t.objectStore('shifts').clear();t.objectStore('settings').clear();t.oncomplete=()=>res();t.onerror=()=>rej(t.error)})}
-};
-const Settings={
-  hourlyRate:5.31, mealRate:0.60, taxRate:11, irsRate:0,
-  async load(){
-    this.hourlyRate=parseFloat(await DB.getSetting('hourlyRate'))||5.31;
-    this.mealRate=parseFloat(await DB.getSetting('mealRate'))||0.60;
-    this.taxRate=parseFloat(await DB.getSetting('taxRate'))||11;
-    this.irsRate=parseFloat(await DB.getSetting('irsRate'))||0;
-  },
-  async save(r,m,t,i){
-    this.hourlyRate=parseFloat(r)||5.31;
-    this.mealRate=parseFloat(m)||0.60;
-    this.taxRate=parseFloat(t)||11;
-    this.irsRate=parseFloat(i)||0;
-    await DB.setSetting('hourlyRate',this.hourlyRate);
-    await DB.setSetting('mealRate',this.mealRate);
-    await DB.setSetting('taxRate',this.taxRate);
-    await DB.setSetting('irsRate',this.irsRate);
-  },
-  // vencimento bruto (só horas)
-  calcVencimento(h){return Math.round(h*this.hourlyRate*100)/100},
-  // sub refeição total (1 por turno/dia único)
-  calcMeal(days){return Math.round(days*this.mealRate*100)/100},
-  // total abonos (sem verbas rescisão)
-  calcGross(h,days){return this.calcVencimento(h)+this.calcMeal(days)},
-  // desconto SS sobre vencimento apenas (não incide sobre sub. refeição)
-  calcSS(h){return Math.round(this.calcVencimento(h)*(this.taxRate/100)*100)/100},
-  // líquido = bruto - SS - IRS
-  calcNet(h,days){
-    const gross=this.calcGross(h,days);
-    const ss=this.calcSS(h);
-    const irs=Math.round(gross*(this.irsRate/100)*100)/100;
-    return Math.round((gross-ss-irs)*100)/100;
-  }
-};
-const Utils={
-  calcHours(s,e,b=0){if(!s||!e)return 0;const[sh,sm]=s.split(':').map(Number),[eh,em]=e.split(':').map(Number);let m=(eh*60+em)-(sh*60+sm)-(parseInt(b)||0);if(m<0)m+=1440;return Math.max(0,m/60)},
-  fmtHours(h){const hr=Math.floor(h),mn=Math.round((h-hr)*60);return mn===0?`${hr}h`:`${hr}h${String(mn).padStart(2,'0')}`},
-  fmtCurrency(v){return new Intl.NumberFormat('pt-PT',{style:'currency',currency:'EUR'}).format(v)},
-  fmtDate(d){const[y,m,day]=d.split('-');return new Date(+y,+m-1,+day).toLocaleDateString('pt-PT',{weekday:'short',day:'numeric',month:'short'})},
-  getYM(d){return d.substring(0,7)},
-  todayStr(){const d=new Date();return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`},
-  curYM(){const d=new Date();return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`},
-  ymLabel(ym){const[y,m]=ym.split('-');return new Date(+y,+m-1,1).toLocaleDateString('pt-PT',{month:'long',year:'numeric'})},
-  ymNext(ym){const[y,m]=ym.split('-').map(Number),d=new Date(y,m,1);return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`},
-  ymPrev(ym){const[y,m]=ym.split('-').map(Number),d=new Date(y,m-2,1);return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`},
-  daysInMonth(ym){const[y,m]=ym.split('-').map(Number);return new Date(y,m,0).getDate()},
-  dayNum(d){return parseInt(d.split('-')[2])}
-};
-const svg=id=>`<svg width="12" height="12"><use href="#${id}"/></svg>`;
-function showToast(msg,type=''){
-  const t=document.getElementById('toast');
-  t.innerHTML=msg;t.className=`toast ${type} show`;
-  clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2800);
-}
-const App={
-  navigate(s){
-    document.querySelectorAll('.screen').forEach(x=>x.classList.remove('active'));
-    document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
-    document.getElementById(`screen-${s}`)?.classList.add('active');
-    document.querySelector(`.nav-btn[data-screen="${s}"]`)?.classList.add('active');
-    if(s==='dashboard')Dashboard.render();
-    if(s==='shifts')Shifts.render();
-    if(s==='reports')Reports.render();
-    if(s==='settings')SettingsScreen.render();
-  }
-};
-document.querySelectorAll('.nav-btn').forEach(b=>b.addEventListener('click',()=>App.navigate(b.dataset.screen)));
-let deferredPrompt=null;
-const ib=document.getElementById('install-banner');
-window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e;setTimeout(()=>ib.classList.add('show'),3000)});
-document.getElementById('btn-install').addEventListener('click',async()=>{if(!deferredPrompt)return;deferredPrompt.prompt();const{outcome}=await deferredPrompt.userChoice;if(outcome==='accepted')showToast('ShiftTrack instalado!','success');deferredPrompt=null;ib.classList.remove('show')});
-document.getElementById('btn-dismiss-install').addEventListener('click',()=>ib.classList.remove('show'));
-if('serviceWorker' in navigator){
-  navigator.serviceWorker.register('./service-worker.js').then(()=>{document.getElementById('sw-status').textContent='Ativo';document.getElementById('sw-status').className='badge badge-accent'}).catch(()=>{});
-}
-(async()=>{await initDB();await Settings.load();Dashboard.render()})();
-</script>
+<!-- PDF.js for PDF text extraction -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<!-- Tesseract.js for OCR -->
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 
 <script>
-// ═══ DASHBOARD ═══
-const Dashboard=(()=>{
-  let cYM=Utils.curYM(),chart=null;
-  document.getElementById('dash-prev-month').addEventListener('click',()=>{cYM=Utils.ymPrev(cYM);render()});
-  document.getElementById('dash-next-month').addEventListener('click',()=>{cYM=Utils.ymNext(cYM);render()});
-  async function render(){
-    document.getElementById('dash-month-label').textContent=Utils.ymLabel(cYM);
-    const S=await DB.getShiftsByMonth(cYM);
-    const tH=S.reduce((s,x)=>s+(x.hours||0),0);
-    const days=new Set(S.map(x=>x.date)).size;
-    const avg=S.length?tH/S.length:0;
-    document.getElementById('stat-total-hours').textContent=Utils.fmtHours(tH);
-    document.getElementById('stat-avg-hours').textContent=`Média: ${Utils.fmtHours(avg)}/turno`;
-    document.getElementById('stat-workdays').textContent=days;
-    document.getElementById('stat-shifts-count').textContent=`${S.length} turno${S.length!==1?'s':''}`;
-    document.getElementById('stat-gross').textContent=Utils.fmtCurrency(Settings.calcVencimento(tH));
-    document.getElementById('stat-rate-info').textContent=`${Utils.fmtCurrency(Settings.hourlyRate)}/hora`;
-    document.getElementById('stat-net').textContent=Utils.fmtCurrency(Settings.calcNet(tH,days));
-    document.getElementById('stat-tax-info').textContent=`SS: ${Settings.taxRate}%`;
-    renderChart(S);
-    const recent=[...S].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,5);
-    renderRecent(recent);
+'use strict';
+// ═══════════════════════════════════════════════════════
+// STORAGE
+// ═══════════════════════════════════════════════════════
+const Store = {
+  get(k, def=null) {
+    try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : def; } catch { return def; }
+  },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
+  getShifts() { return this.get('st_shifts', []); },
+  saveShifts(s) { this.set('st_shifts', s); },
+  getSettings() { return this.get('st_settings', { hourlyRate: 5.31, mealRate: 0.60, ssRate: 11, irsRate: 0 }); },
+  getAnalyses() { return this.get('st_analyses', []); },
+  saveAnalyses(a) { this.set('st_analyses', a); },
+};
+
+// ═══════════════════════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════════════════════
+const Utils = {
+  // Portuguese payslip hours: "7.30" = 7h30m (NOT decimal)
+  parsePayslipHours(str) {
+    if (!str) return 0;
+    const s = String(str).trim().replace(',', '.');
+    const parts = s.split('.');
+    if (parts.length === 2) {
+      const h = parseInt(parts[0]) || 0;
+      const m = parseInt(parts[1].padEnd(2,'0').substring(0,2)) || 0;
+      return h * 60 + m; // returns minutes
+    }
+    return (parseFloat(s) || 0) * 60;
+  },
+  minsToHHMM(mins) {
+    if (isNaN(mins) || mins < 0) return '0h00';
+    const h = Math.floor(mins / 60), m = Math.round(mins % 60);
+    return `${h}h${String(m).padStart(2,'0')}`;
+  },
+  calcShiftMins(start, end, breakMin=0) {
+    if (!start || !end) return 0;
+    const [sh,sm] = start.split(':').map(Number);
+    const [eh,em] = end.split(':').map(Number);
+    let m = (eh*60+em) - (sh*60+sm) - (parseInt(breakMin)||0);
+    if (m < 0) m += 1440;
+    return Math.max(0, m);
+  },
+  fmtCurrency(v) { return new Intl.NumberFormat('pt-PT', {style:'currency',currency:'EUR'}).format(v||0); },
+  fmtDate(d) {
+    const [y,mo,day] = d.split('-');
+    return new Date(+y,+mo-1,+day).toLocaleDateString('pt-PT',{weekday:'short',day:'numeric',month:'short'});
+  },
+  todayStr() {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  },
+  curYM() {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+  },
+  ymLabel(ym) {
+    const [y,m] = ym.split('-');
+    return new Date(+y,+m-1,1).toLocaleDateString('pt-PT',{month:'long',year:'numeric'});
+  },
+  ymNext(ym) {
+    const [y,m] = ym.split('-').map(Number);
+    const d = new Date(y,m,1);
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+  },
+  ymPrev(ym) {
+    const [y,m] = ym.split('-').map(Number);
+    const d = new Date(y,m-2,1);
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+  },
+  daysInMonth(ym) {
+    const [y,m] = ym.split('-').map(Number);
+    return new Date(y,m,0).getDate();
+  },
+  dayOfWeek(ym, day) {
+    const [y,m] = ym.split('-').map(Number);
+    return new Date(y,m-1,day).getDay(); // 0=Sun
+  },
+};
+
+// ═══════════════════════════════════════════════════════
+// TOAST
+// ═══════════════════════════════════════════════════════
+function toast(msg, type='') {
+  const el = document.getElementById('toast');
+  el.innerHTML = msg; el.className = `toast ${type} show`;
+  clearTimeout(el._t);
+  el._t = setTimeout(() => el.classList.remove('show'), 2800);
+}
+
+// ═══════════════════════════════════════════════════════
+// ROUTER
+// ═══════════════════════════════════════════════════════
+let currentPage = 'home';
+function navigate(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(`page-${page}`)?.classList.add('active');
+  document.querySelector(`.nav-btn[data-page="${page}"]`)?.classList.add('active');
+  currentPage = page;
+  if (page === 'home')     Dashboard.render();
+  if (page === 'add')      AddShift.render();
+  if (page === 'history')  History.render();
+  if (page === 'analysis') Analysis.render();
+  if (page === 'upload')   Upload.init();
+}
+document.querySelectorAll('.nav-btn').forEach(b =>
+  b.addEventListener('click', () => navigate(b.dataset.page))
+);
+
+// ═══════════════════════════════════════════════════════
+// ICON HELPER
+// ═══════════════════════════════════════════════════════
+const icon = (id, w=12) => `<svg width="${w}" height="${w}"><use href="#${id}"/></svg>`;
+
+// ═══════════════════════════════════════════════════════
+// CALENDAR RENDERER
+// ═══════════════════════════════════════════════════════
+function renderCalendar(containerId, ym, selectedDate, onSelect, highlights=[]) {
+  const c = document.getElementById(containerId);
+  if (!c) return;
+  const days = Utils.daysInMonth(ym);
+  const firstDow = Utils.dayOfWeek(ym, 1); // 0=Sun
+  const startCol = firstDow === 0 ? 6 : firstDow - 1; // Mon-first
+  const dowLabels = ['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'];
+  let html = `<div class="cal-grid">`;
+  dowLabels.forEach(d => html += `<div class="cal-day-hdr">${d}</div>`);
+  for (let i = 0; i < startCol; i++) html += `<div class="cal-day empty-day"></div>`;
+  for (let d = 1; d <= days; d++) {
+    const dateStr = `${ym}-${String(d).padStart(2,'0')}`;
+    const today = dateStr === Utils.todayStr();
+    const sel = dateStr === selectedDate;
+    const hasShift = highlights.includes(dateStr);
+    let cls = 'cal-day';
+    if (today) cls += ' today';
+    if (hasShift) cls += ' has-shift';
+    if (sel) cls += ' selected';
+    html += `<div class="${cls}" data-date="${dateStr}">${d}</div>`;
   }
-  function renderChart(S){
-    const days=Utils.daysInMonth(cYM),dm={};
-    S.forEach(s=>{const d=Utils.dayNum(s.date);dm[d]=(dm[d]||0)+(s.hours||0)});
-    const labels=[],data=[];
-    for(let d=1;d<=days;d++){labels.push(d);data.push(parseFloat((dm[d]||0).toFixed(2)))}
-    const ctx=document.getElementById('hours-chart');if(!ctx)return;
-    if(chart)chart.destroy();
-    Chart.defaults.color='#8890a8';Chart.defaults.font.family="'DM Sans',sans-serif";
-    chart=new Chart(ctx,{type:'bar',data:{labels,datasets:[{data,backgroundColor:data.map(v=>v>0?'rgba(0,212,170,.7)':'rgba(42,47,61,.5)'),borderColor:data.map(v=>v>0?'rgb(0,212,170)':'rgba(0,0,0,0)'),borderWidth:1,borderRadius:4,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'#1e2330',borderColor:'#2a2f3d',borderWidth:1,titleColor:'#eef0f6',bodyColor:'#00d4aa',callbacks:{label:c=>` ${Utils.fmtHours(c.raw)}`}}},scales:{x:{grid:{color:'rgba(42,47,61,.5)'},ticks:{font:{size:10},maxTicksLimit:10}},y:{grid:{color:'rgba(42,47,61,.5)'},ticks:{font:{size:10},callback:v=>`${v}h`},beginAtZero:true}}}});
+  html += '</div>';
+  c.innerHTML = html;
+  c.querySelectorAll('.cal-day[data-date]').forEach(el =>
+    el.addEventListener('click', () => onSelect(el.dataset.date))
+  );
+}
+
+// ═══════════════════════════════════════════════════════
+// DASHBOARD
+// ═══════════════════════════════════════════════════════
+const Dashboard = (() => {
+  let ym = Utils.curYM();
+  function render() {
+    document.getElementById('dash-month-badge').textContent = Utils.ymLabel(ym);
+    document.getElementById('dash-month-lbl').textContent = Utils.ymLabel(ym);
+    const s = Store.getSettings();
+    const allShifts = Store.getShifts();
+    const shifts = allShifts.filter(sh => sh.date.startsWith(ym));
+    const totalMins = shifts.reduce((t, sh) => t + sh.mins, 0);
+    const days = new Set(shifts.map(sh => sh.date)).size;
+    const wage = Math.round(totalMins / 60 * s.hourlyRate * 100) / 100;
+    const meal = Math.round(days * s.mealRate * 100) / 100;
+    const gross = wage + meal;
+    const ss = Math.round(wage * s.ssRate / 100 * 100) / 100;
+    const net = Math.round((gross - ss) * 100) / 100;
+
+    document.getElementById('ds-hours').textContent = Utils.minsToHHMM(totalMins);
+    document.getElementById('ds-days').textContent = `${shifts.length} turno${shifts.length!==1?'s':''}`;
+    document.getElementById('ds-net').textContent = Utils.fmtCurrency(net);
+    document.getElementById('ds-gross').textContent = `Bruto: ${Utils.fmtCurrency(gross)}`;
+    document.getElementById('ds-wage').textContent = Utils.fmtCurrency(wage);
+    document.getElementById('ds-rate').textContent = `${Utils.fmtCurrency(s.hourlyRate)}/hora`;
+    document.getElementById('ds-meal').textContent = Utils.fmtCurrency(meal);
+    document.getElementById('ds-meal-days').textContent = `${days} dias × ${Utils.fmtCurrency(s.mealRate)}`;
+
+    const highlights = shifts.map(s => s.date);
+    renderCalendar('dash-cal', ym, null, (d) => { navigate('add'); AddShift.setDate(d); }, highlights);
+
+    const recent = [...shifts].sort((a,b) => b.date.localeCompare(a.date)).slice(0, 6);
+    const c = document.getElementById('dash-shifts');
+    if (!recent.length) {
+      c.innerHTML = `<div class="empty"><svg><use href="#i-clock"/></svg><h3>Sem turnos este mês</h3><p>Regista o teu primeiro turno<br>no separador Registo</p></div>`;
+      return;
+    }
+    c.innerHTML = recent.map(sh => shiftCard(sh)).join('');
   }
-  function renderRecent(S){
-    const c=document.getElementById('recent-shifts-list');
-    if(!S.length){c.innerHTML=`<div class="empty-state"><div class="empty-icon"><svg width="52" height="52"><use href="#i-clock"/></svg></div><div class="empty-title">Sem turnos este mês</div><div class="empty-sub">Adiciona o teu primeiro turno<br>no separador Adicionar</div></div>`;return}
-    c.innerHTML=`<div class="shift-list">${S.map(s=>shiftCard(s,false)).join('')}</div>`;
-  }
-  function shiftCard(s,actions=true){
-    const[,,day]=s.date.split('-');
-    const mo=new Date(s.date+'T00:00:00').toLocaleDateString('pt-PT',{month:'short'});
-    const act=actions?`<div class="shift-actions"><button class="btn-icon" onclick="Shifts.openEdit(${s.id})">${svg('i-edit')}</button><button class="btn-icon danger" onclick="Shifts.openDelete(${s.id})">${svg('i-trash')}</button></div>`:'';
-    return`<div class="shift-item"><div class="shift-date-badge"><span class="shift-date-day">${day}</span><span class="shift-date-month">${mo}</span></div><div class="shift-info"><div class="shift-client">${s.client||'Sem cliente'}</div><div class="shift-meta">${s.location?`${svg('i-pin')} ${s.location} `:''} ${svg('i-clock')} ${s.startTime}–${s.endTime}</div></div><div class="shift-hours">${Utils.fmtHours(s.hours)}</div>${act}</div>`;
-  }
-  return{render,shiftCard};
+  document.getElementById('dash-prev').addEventListener('click', () => { ym = Utils.ymPrev(ym); render(); });
+  document.getElementById('dash-next').addEventListener('click', () => { ym = Utils.ymNext(ym); render(); });
+  return { render, getYM: () => ym };
 })();
-</script>
 
-<script>
-// ═══ SHIFTS ═══
-const Shifts=(()=>{
-  let hYM=Utils.curYM(),editId=null,delId=null;
-  document.getElementById('hist-prev-month').addEventListener('click',()=>{hYM=Utils.ymPrev(hYM);render()});
-  document.getElementById('hist-next-month').addEventListener('click',()=>{hYM=Utils.ymNext(hYM);render()});
-  document.getElementById('shift-date').value=Utils.todayStr();
-  const calcP=pfx=>{
-    const s=document.getElementById(`${pfx}-start`).value;
-    const e=document.getElementById(`${pfx}-end`).value;
-    const b=document.getElementById(`${pfx}-break`).value;
-    const h=Utils.calcHours(s,e,b);
-    document.getElementById(pfx==='shift'?'calc-hours':'edit-calc-hours').textContent=h>0?Utils.fmtHours(h):'— h';
-  };
-  ['shift-start','shift-end','shift-break'].forEach(id=>document.getElementById(id).addEventListener('input',()=>calcP('shift')));
-  ['edit-start','edit-end','edit-break'].forEach(id=>document.getElementById(id).addEventListener('input',()=>calcP('edit')));
-  document.getElementById('btn-save-shift').addEventListener('click',async()=>{
-    const date=document.getElementById('shift-date').value;
-    const startTime=document.getElementById('shift-start').value;
-    const endTime=document.getElementById('shift-end').value;
-    const breakMin=parseInt(document.getElementById('shift-break').value)||0;
-    if(!date||!startTime||!endTime){showToast('Preenche data, entrada e saída','error');return}
-    const hours=Utils.calcHours(startTime,endTime,breakMin);
-    if(hours<=0){showToast('A saída deve ser após a entrada','error');return}
-    await DB.addShift({date,startTime,endTime,breakMin,hours,client:document.getElementById('shift-client').value.trim(),location:document.getElementById('shift-location').value.trim(),notes:document.getElementById('shift-notes').value.trim(),yearMonth:Utils.getYM(date),createdAt:Date.now()});
-    showToast('Turno guardado!','success');
-    document.getElementById('shift-date').value=Utils.todayStr();
-    ['shift-start','shift-end','shift-break','shift-client','shift-location','shift-notes'].forEach(id=>document.getElementById(id).value='');
-    document.getElementById('calc-hours').textContent='— h';
-    App.navigate('shifts');
-  });
-  async function render(){
-    document.getElementById('hist-month-label').textContent=Utils.ymLabel(hYM);
-    const S=await DB.getShiftsByMonth(hYM);
-    const sorted=[...S].sort((a,b)=>b.date.localeCompare(a.date));
-    const c=document.getElementById('shifts-list');
-    if(!sorted.length){c.innerHTML=`<div class="empty-state"><div class="empty-icon"><svg width="52" height="52"><use href="#i-list"/></svg></div><div class="empty-title">Sem turnos em ${Utils.ymLabel(hYM)}</div><div class="empty-sub">Navega para outro mês<br>ou adiciona um novo turno</div></div>`;return}
-    const grp={};sorted.forEach(s=>{if(!grp[s.date])grp[s.date]=[];grp[s.date].push(s)});
-    const svg=id=>`<svg width="12" height="12"><use href="#${id}"/></svg>`;
-    let html='<div class="shift-list">';
-    Object.entries(grp).sort(([a],[b])=>b.localeCompare(a)).forEach(([date,ds])=>{
-      const tot=ds.reduce((t,s)=>t+s.hours,0);
-      html+=`<div style="display:flex;align-items:center;justify-content:space-between;padding:4px 2px 6px;margin-top:8px;"><span style="font-size:.75rem;font-family:'Syne',sans-serif;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;">${Utils.fmtDate(date)}</span><span style="font-size:.75rem;color:var(--accent);font-family:'Syne',sans-serif;font-weight:700;">${Utils.fmtHours(tot)}</span></div>`;
-      ds.forEach(s=>{
-        const[,,day]=s.date.split('-'),mo=new Date(s.date+'T00:00:00').toLocaleDateString('pt-PT',{month:'short'});
-        const gross=Settings.calcGross(s.hours);
-        html+=`<div class="shift-item"><div class="shift-date-badge"><span class="shift-date-day">${day}</span><span class="shift-date-month">${mo}</span></div><div class="shift-info"><div class="shift-client">${s.client||'Sem cliente'}</div><div class="shift-meta">${s.location?`${svg('i-pin')} ${s.location} `:''}${svg('i-clock')} ${s.startTime}–${s.endTime}${s.breakMin>0?` ${svg('i-coffee')} ${s.breakMin}min`:''}</div>${Settings.hourlyRate>0?`<div style="font-size:.7rem;color:var(--text3);margin-top:3px;">${Utils.fmtCurrency(gross)}</div>`:''}</div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0;"><span class="shift-hours">${Utils.fmtHours(s.hours)}</span><div class="shift-actions"><button class="btn-icon" onclick="Shifts.openEdit(${s.id})">${svg('i-edit')}</button><button class="btn-icon danger" onclick="Shifts.openDelete(${s.id})">${svg('i-trash')}</button></div></div></div>`;
-      });
-    });
-    html+='</div>';c.innerHTML=html;
+// ═══════════════════════════════════════════════════════
+// SHIFT CARD
+// ═══════════════════════════════════════════════════════
+function shiftCard(sh, withActions=true) {
+  const [,,d] = sh.date.split('-');
+  const mo = new Date(sh.date+'T00:00').toLocaleDateString('pt-PT',{month:'short'});
+  const s = Store.getSettings();
+  const earn = Math.round(sh.mins / 60 * s.hourlyRate * 100) / 100;
+  const acts = withActions ? `<div class="shift-actions">
+    <button class="btn-icon" onclick="Shifts.openEdit('${sh.id}')">${icon('i-edit',13)}</button>
+    <button class="btn-icon danger" onclick="Shifts.openDelete('${sh.id}')">${icon('i-trash',13)}</button>
+  </div>` : '';
+  return `<div class="shift-item">
+    <div class="shift-day"><div class="shift-day-num">${d}</div><div class="shift-day-mo">${mo}</div></div>
+    <div class="shift-body">
+      <div class="shift-time">${icon('i-clock',12)} ${sh.start} – ${sh.end}${sh.breakMin>0?` · ${sh.breakMin}' pausa`:''}</div>
+      <div class="shift-client">${sh.client||'Sem cliente'}${sh.location?' · '+sh.location:''}</div>
+    </div>
+    <div class="shift-dur">${Utils.minsToHHMM(sh.mins)}</div>
+    ${acts}
+  </div>`;
+}
+
+// ═══════════════════════════════════════════════════════
+// ADD SHIFT
+// ═══════════════════════════════════════════════════════
+const AddShift = (() => {
+  let selDate = Utils.todayStr();
+  let ym = selDate.substring(0,7);
+
+  function setDate(d) { selDate = d; ym = d.substring(0,7); render(); }
+
+  function calcPreview() {
+    const s = document.getElementById('shift-start').value;
+    const e = document.getElementById('shift-end').value;
+    const b = document.getElementById('shift-break').value;
+    const m = Utils.calcShiftMins(s, e, b);
+    document.getElementById('shift-preview').textContent = m > 0 ? Utils.minsToHHMM(m) : '— h';
   }
-  async function openEdit(id){
-    const all=await DB.getAllShifts(),s=all.find(x=>x.id===id);if(!s)return;
-    editId=id;
-    ['date','start','end','break','client','location','notes'].forEach(f=>{
-      const el=document.getElementById(`edit-${f}`);
-      if(el)el.value=s[f==='start'?'startTime':f==='end'?'endTime':f==='break'?'breakMin':f]||'';
-    });
-    document.getElementById('edit-calc-hours').textContent=Utils.fmtHours(s.hours);
+
+  function render() {
+    const shifts = Store.getShifts();
+    const highlights = shifts.map(s => s.date);
+    renderCalendar('add-cal', ym, selDate, (d) => { selDate = d; ym = d.substring(0,7); render(); }, highlights);
+    const dayShifts = shifts.filter(s => s.date === selDate).sort((a,b) => a.start.localeCompare(b.start));
+    const c = document.getElementById('add-day-shifts');
+    if (dayShifts.length) {
+      c.innerHTML = `<div class="sec-hdr" style="margin-top:14px;"><h2>${Utils.fmtDate(selDate)}</h2></div>` +
+        dayShifts.map(sh => shiftCard(sh)).join('');
+    } else {
+      c.innerHTML = '';
+    }
+    // Pre-fill date display
+    document.querySelectorAll('.topbar-eyebrow')[1].textContent = Utils.fmtDate(selDate);
+  }
+
+  ['shift-start','shift-end','shift-break'].forEach(id =>
+    document.getElementById(id).addEventListener('input', calcPreview)
+  );
+
+  document.getElementById('btn-save-shift').addEventListener('click', () => {
+    const start = document.getElementById('shift-start').value;
+    const end = document.getElementById('shift-end').value;
+    const breakMin = parseInt(document.getElementById('shift-break').value)||0;
+    if (!start || !end) { toast(`${icon('i-warn',14)} Preenche hora de entrada e saída`, 'err'); return; }
+    const mins = Utils.calcShiftMins(start, end, breakMin);
+    if (mins <= 0) { toast(`${icon('i-warn',14)} A saída deve ser após a entrada`, 'err'); return; }
+    const shift = {
+      id: Date.now().toString(),
+      date: selDate, start, end, breakMin, mins,
+      client: document.getElementById('shift-client').value.trim(),
+      location: document.getElementById('shift-location').value.trim(),
+    };
+    const shifts = Store.getShifts();
+    shifts.push(shift);
+    Store.saveShifts(shifts);
+    toast(`${icon('i-check',14)} Turno guardado!`, 'ok');
+    ['shift-start','shift-end','shift-break','shift-client','shift-location'].forEach(id =>
+      document.getElementById(id).value = '');
+    document.getElementById('shift-preview').textContent = '— h';
+    render();
+  });
+
+  return { render, setDate };
+})();
+
+// ═══════════════════════════════════════════════════════
+// SHIFT EDIT/DELETE
+// ═══════════════════════════════════════════════════════
+const Shifts = (() => {
+  let editId = null, delId = null;
+
+  function calcEditPreview() {
+    const s = document.getElementById('edit-start').value;
+    const e = document.getElementById('edit-end').value;
+    const b = document.getElementById('edit-break').value;
+    document.getElementById('edit-preview').textContent = Utils.minsToHHMM(Utils.calcShiftMins(s,e,b));
+  }
+  ['edit-start','edit-end','edit-break'].forEach(id =>
+    document.getElementById(id).addEventListener('input', calcEditPreview)
+  );
+
+  function openEdit(id) {
+    const sh = Store.getShifts().find(s => s.id === id);
+    if (!sh) return;
+    editId = id;
+    document.getElementById('edit-start').value = sh.start;
+    document.getElementById('edit-end').value = sh.end;
+    document.getElementById('edit-break').value = sh.breakMin||0;
+    document.getElementById('edit-client').value = sh.client||'';
+    document.getElementById('edit-location').value = sh.location||'';
+    document.getElementById('edit-preview').textContent = Utils.minsToHHMM(sh.mins);
     document.getElementById('edit-modal').classList.add('open');
   }
-  document.getElementById('btn-cancel-edit').addEventListener('click',()=>{document.getElementById('edit-modal').classList.remove('open');editId=null});
-  document.getElementById('edit-modal').addEventListener('click',e=>{if(e.target===document.getElementById('edit-modal')){document.getElementById('edit-modal').classList.remove('open');editId=null}});
-  document.getElementById('btn-save-edit').addEventListener('click',async()=>{
-    if(!editId)return;
-    const date=document.getElementById('edit-date').value;
-    const startTime=document.getElementById('edit-start').value;
-    const endTime=document.getElementById('edit-end').value;
-    const breakMin=parseInt(document.getElementById('edit-break').value)||0;
-    if(!date||!startTime||!endTime){showToast('Preenche todos os campos','error');return}
-    await DB.updateShift({id:editId,date,startTime,endTime,breakMin,hours:Utils.calcHours(startTime,endTime,breakMin),client:document.getElementById('edit-client').value.trim(),location:document.getElementById('edit-location').value.trim(),notes:document.getElementById('edit-notes').value.trim(),yearMonth:Utils.getYM(date)});
-    document.getElementById('edit-modal').classList.remove('open');editId=null;
-    showToast('Turno atualizado!','success');render();Dashboard.render();
-  });
-  function openDelete(id){delId=id;document.getElementById('delete-modal').classList.add('open')}
-  document.getElementById('btn-cancel-delete').addEventListener('click',()=>{document.getElementById('delete-modal').classList.remove('open');delId=null});
-  document.getElementById('delete-modal').addEventListener('click',e=>{if(e.target===document.getElementById('delete-modal')){document.getElementById('delete-modal').classList.remove('open');delId=null}});
-  document.getElementById('btn-confirm-delete').addEventListener('click',async()=>{
-    if(!delId)return;await DB.deleteShift(delId);
-    document.getElementById('delete-modal').classList.remove('open');delId=null;
-    showToast('Turno apagado','');render();Dashboard.render();
-  });
-  document.getElementById('btn-clear-data').addEventListener('click',async()=>{
-    if(!confirm('Tens a certeza? Todos os dados serão apagados.'))return;
-    await DB.clearAll();await Settings.load();
-    showToast('Todos os dados apagados','');render();Dashboard.render();SettingsScreen.render();
-  });
-  return{render,openEdit,openDelete};
-})();
-</script>
 
-<script>
-// ═══ REPORTS + SETTINGS ═══
-const Reports=(()=>{
-  let rYM=Utils.curYM(),chart=null;
-  document.getElementById('rep-prev-month').addEventListener('click',()=>{rYM=Utils.ymPrev(rYM);render()});
-  document.getElementById('rep-next-month').addEventListener('click',()=>{rYM=Utils.ymNext(rYM);render()});
-  async function render(){
-    document.getElementById('rep-month-label').textContent=Utils.ymLabel(rYM);
-    const S=await DB.getShiftsByMonth(rYM);
-    const tH=S.reduce((s,x)=>s+(x.hours||0),0);
-    const days=new Set(S.map(x=>x.date)).size;
-    document.getElementById('rep-title').textContent=Utils.ymLabel(rYM);
-    document.getElementById('rep-meta').textContent=`${S.length} turno${S.length!==1?'s':''} · ${days} dia${days!==1?'s':''} de trabalho`;
-    document.getElementById('rep-hours').textContent=Utils.fmtHours(tH);
-    document.getElementById('rep-gross').textContent=Utils.fmtCurrency(Settings.calcVencimento(tH));
-    document.getElementById('rep-net').textContent=Utils.fmtCurrency(Settings.calcNet(tH,days));
-    renderChart(S);renderList(S);
-    document.getElementById('comp-paid-hours').value='';
-    ['comp-rate','comp-meal-rate','comp-meal-days','comp-natal','comp-caducidade','comp-ferias','comp-ferias-ng','comp-paid-amount','comp-card-amount'].forEach(id=>{
-      const el=document.getElementById(id);
-      if(el&&id!=='comp-rate'&&id!=='comp-meal-rate')el.value='';
-    });
-    document.getElementById('comparison-result').style.display='none';
+  document.getElementById('edit-cancel').addEventListener('click', () => {
+    document.getElementById('edit-modal').classList.remove('open'); editId = null;
+  });
+  document.getElementById('edit-modal').addEventListener('click', e => {
+    if (e.target === document.getElementById('edit-modal')) {
+      document.getElementById('edit-modal').classList.remove('open'); editId = null;
+    }
+  });
+  document.getElementById('edit-save').addEventListener('click', () => {
+    if (!editId) return;
+    const start = document.getElementById('edit-start').value;
+    const end = document.getElementById('edit-end').value;
+    const breakMin = parseInt(document.getElementById('edit-break').value)||0;
+    const mins = Utils.calcShiftMins(start, end, breakMin);
+    const shifts = Store.getShifts();
+    const idx = shifts.findIndex(s => s.id === editId);
+    if (idx >= 0) {
+      shifts[idx] = { ...shifts[idx], start, end, breakMin, mins,
+        client: document.getElementById('edit-client').value.trim(),
+        location: document.getElementById('edit-location').value.trim() };
+      Store.saveShifts(shifts);
+    }
+    document.getElementById('edit-modal').classList.remove('open'); editId = null;
+    toast(`${icon('i-check',14)} Turno atualizado!`, 'ok');
+    if (currentPage === 'home') Dashboard.render();
+    if (currentPage === 'add') AddShift.render();
+  });
+
+  function openDelete(id) {
+    delId = id;
+    document.getElementById('del-modal').classList.add('open');
   }
-  function renderChart(S){
-    const days=Utils.daysInMonth(rYM),dm={};
-    S.forEach(s=>{const d=Utils.dayNum(s.date);dm[d]=(dm[d]||0)+(s.hours||0)});
-    const labels=[],data=[];for(let d=1;d<=days;d++){labels.push(d);data.push(parseFloat((dm[d]||0).toFixed(2)))}
-    const ctx=document.getElementById('report-chart');if(!ctx)return;
-    if(chart)chart.destroy();
-    chart=new Chart(ctx,{type:'bar',data:{labels,datasets:[{data,backgroundColor:data.map(v=>v>0?'rgba(0,153,255,.7)':'rgba(42,47,61,.5)'),borderColor:data.map(v=>v>0?'rgb(0,153,255)':'rgba(0,0,0,0)'),borderWidth:1,borderRadius:4,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'#1e2330',borderColor:'#2a2f3d',borderWidth:1,titleColor:'#eef0f6',bodyColor:'#0099ff',callbacks:{label:c=>` ${Utils.fmtHours(c.raw)}`}}},scales:{x:{grid:{color:'rgba(42,47,61,.5)'},ticks:{font:{size:10},maxTicksLimit:10}},y:{grid:{color:'rgba(42,47,61,.5)'},ticks:{font:{size:10},callback:v=>`${v}h`},beginAtZero:true}}}});
+  document.getElementById('del-cancel').addEventListener('click', () => {
+    document.getElementById('del-modal').classList.remove('open'); delId = null;
+  });
+  document.getElementById('del-modal').addEventListener('click', e => {
+    if (e.target === document.getElementById('del-modal')) {
+      document.getElementById('del-modal').classList.remove('open'); delId = null;
+    }
+  });
+  document.getElementById('del-confirm').addEventListener('click', () => {
+    if (!delId) return;
+    const shifts = Store.getShifts().filter(s => s.id !== delId);
+    Store.saveShifts(shifts);
+    document.getElementById('del-modal').classList.remove('open'); delId = null;
+    toast(`${icon('i-trash',14)} Turno apagado`, '');
+    if (currentPage === 'home') Dashboard.render();
+    if (currentPage === 'add') AddShift.render();
+  });
+
+  return { openEdit, openDelete };
+})();
+
+// ═══════════════════════════════════════════════════════
+// PAYSLIP PARSER — Portuguese format
+// ═══════════════════════════════════════════════════════
+const Parser = {
+  // Extract all numbers near a label (robust multi-pattern)
+  extractValue(text, patterns) {
+    for (const re of patterns) {
+      const m = text.match(re);
+      if (m) {
+        const raw = m[1].replace(',', '.').trim();
+        return parseFloat(raw) || 0;
+      }
+    }
+    return null;
+  },
+
+  // Parse full payslip text
+  parse(text) {
+    const t = text;
+    const result = {};
+
+    // === HOURS — Portuguese HH.MM format ===
+    // Look for "QUANT." column values near Vencimento
+    const hoursPatterns = [
+      /Vencimento\s+(\d+[.,]\d{2})\s+\d/i,
+      /Vencimento\s+(\d+[.,]\d+)/i,
+      /QUANT[.\s]*\n.*?(\d+[.,]\d{2})\s+\d+[.,]/i,
+    ];
+    const rawHours = this.extractValue(t, hoursPatterns);
+    if (rawHours !== null) {
+      result.payslipHoursMins = Utils.parsePayslipHours(rawHours);
+      result.rawHoursStr = String(rawHours);
+    }
+
+    // === HOURLY RATE ===
+    const ratePatterns = [
+      /Vencimento\s+\d+[.,]\d+\s+(\d+[.,]\d{2})/i,
+      /taxa.*?(\d+[.,]\d{2})\s*€/i,
+    ];
+    result.hourlyRate = this.extractValue(t, ratePatterns) || 5.31;
+
+    // === VENCIMENTO (gross wage line) ===
+    const vencPatterns = [
+      /Vencimento\s+[\d.,]+\s+[\d.,]+\s+(\d+[.,]\d{2})/i,
+      /vencimento[^\n]*?(\d{1,4}[.,]\d{2})\s*$/im,
+    ];
+    result.vencimento = this.extractValue(t, vencPatterns);
+
+    // === SUB. REFEIÇÃO ===
+    const mealPatterns = [
+      /Sub[sí]+dio\s+de\s+Refei[çc][ãa]o[^\n]*?(\d+[.,]\d{2})\s*$/im,
+      /refei[çc][ãa]o[^\n]*?(\d+[.,]\d{2})/i,
+    ];
+    result.mealSubsidy = this.extractValue(t, mealPatterns);
+
+    // === SUB. NATAL ===
+    const natalPatterns = [
+      /Sub[sí]+dio\s+de\s+natal[^\n]*?(\d+[.,]\d{2})\s*$/im,
+      /sub.*natal[^\n]*?(\d+[.,]\d{2})/i,
+    ];
+    result.natalSubsidy = this.extractValue(t, natalPatterns);
+
+    // === CADUCIDADE ===
+    const caducPatterns = [
+      /Caducidade[^\n]*?(\d+[.,]\d{2})\s*$/im,
+    ];
+    result.caducidade = this.extractValue(t, caducPatterns);
+
+    // === SUB. FÉRIAS ===
+    const feriasPatterns = [
+      /Sub[sí]+dio\s+de\s+f[eé]rias[^\n]*?(\d+[.,]\d{2})\s*$/im,
+      /sub.*f[eé]rias(?!.*n[ãa]o)[^\n]*?(\d+[.,]\d{2})/i,
+    ];
+    result.feriasSubsidy = this.extractValue(t, feriasPatterns);
+
+    // === FÉRIAS NÃO GOZADAS ===
+    const feriasNGPatterns = [
+      /F[eé]rias\s+n[ãa]o\s+gozadas[^\n]*?(\d+[.,]\d{2})\s*$/im,
+    ];
+    result.feriasNaoGozadas = this.extractValue(t, feriasNGPatterns);
+
+    // === TOTAL ABONOS ===
+    const totalPatterns = [
+      /TOTAIS\s+(\d+[.,]\d{2})/i,
+      /total.*?abonos[^\n]*?(\d+[.,]\d{2})/i,
+    ];
+    result.totalAbonos = this.extractValue(t, totalPatterns);
+
+    // === DESCONTO SS ===
+    const ssPatterns = [
+      /Seguran[çc]a\s+Social\s+\d+[.,]\d+\s+\d+[.,]\d+\s+(\d+[.,]\d{2})/i,
+      /TOTAIS\s+[\d.,]+\s+(\d+[.,]\d{2})/i,
+    ];
+    result.ssDiscount = this.extractValue(t, ssPatterns);
+
+    // === TOTAL LÍQUIDO ===
+    const liquidoPatterns = [
+      /L[ÍI]QUIDO\s+A\s+RECEBER\s*[\n\r]+\s*(\d+[.,]\d{2})/i,
+      /TOTAL\s+L[ÍI]QUIDO[^\n]*?(\d+[.,]\d{2})/i,
+      /a\s+receber[^\n]*?(\d{2,}[.,]\d{2})/i,
+    ];
+    result.totalLiquido = this.extractValue(t, liquidoPatterns);
+
+    // === SS RATE (detect 11%) ===
+    const ssRateMatch = t.match(/Seguran[çc]a\s+Social\s+(\d{1,3}[.,]\d{2})/i);
+    if (ssRateMatch) result.ssRate = parseFloat(ssRateMatch[1].replace(',','.'));
+
+    return result;
   }
-  function renderList(S){
-    const c=document.getElementById('report-shifts-list');
-    if(!S.length){c.innerHTML=`<div class="empty-state"><div class="empty-icon"><svg width="52" height="52"><use href="#i-bar"/></svg></div><div class="empty-title">Sem dados este mês</div></div>`;return}
-    const sv=id=>`<svg width="12" height="12"><use href="#${id}"/></svg>`;
-    let html='<div class="shift-list">';
-    [...S].sort((a,b)=>b.date.localeCompare(a.date)).forEach(s=>{
-      const[,,day]=s.date.split('-'),mo=new Date(s.date+'T00:00:00').toLocaleDateString('pt-PT',{month:'short'});
-      html+=`<div class="shift-item"><div class="shift-date-badge"><span class="shift-date-day">${day}</span><span class="shift-date-month">${mo}</span></div><div class="shift-info"><div class="shift-client">${s.client||'Sem cliente'}</div><div class="shift-meta">${s.location?`${sv('i-pin')} ${s.location} `:''}${sv('i-clock')} ${s.startTime}–${s.endTime}</div></div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;flex-shrink:0;"><span class="shift-hours">${Utils.fmtHours(s.hours)}</span>${Settings.hourlyRate>0?`<span style="font-size:.72rem;color:var(--text3);">${Utils.fmtCurrency(Settings.calcGross(s.hours))}</span>`:''}</div></div>`;
-    });
-    html+='</div>';c.innerHTML=html;
+};
+
+// ═══════════════════════════════════════════════════════
+// UPLOAD & EXTRACTION
+// ═══════════════════════════════════════════════════════
+const Upload = (() => {
+  let uploadYM = Utils.curYM();
+  let extractedData = null;
+  let fileReady = false;
+
+  function init() {
+    document.getElementById('up-month-lbl').textContent = Utils.ymLabel(uploadYM);
+    extractedData = null;
+    fileReady = false;
   }
-  document.getElementById('btn-compare').addEventListener('click',async()=>{
-    const S=await DB.getShiftsByMonth(rYM);
-    const regHours=S.reduce((s,x)=>s+(x.hours||0),0);
-    const regDays=new Set(S.map(x=>x.date)).size;
-    const recHours=parseFloat(document.getElementById('comp-paid-hours').value)||0;
-    const recRate=parseFloat(document.getElementById('comp-rate').value)||Settings.hourlyRate;
-    const recMealRate=parseFloat(document.getElementById('comp-meal-rate').value)||Settings.mealRate;
-    const recMealDays=parseFloat(document.getElementById('comp-meal-days').value)||0;
-    const recNatal=parseFloat(document.getElementById('comp-natal').value)||0;
-    const recCaduc=parseFloat(document.getElementById('comp-caducidade').value)||0;
-    const recFerias=parseFloat(document.getElementById('comp-ferias').value)||0;
-    const recFeriasNG=parseFloat(document.getElementById('comp-ferias-ng').value)||0;
-    const recLiquido=parseFloat(document.getElementById('comp-paid-amount').value)||0;
-    const recCartao=parseFloat(document.getElementById('comp-card-amount').value)||0;
-    const expVenc=Settings.calcVencimento(regHours);
-    const expMeal=Settings.calcMeal(regDays);
-    const expSS=Settings.calcSS(regHours);
-    const expTotal=expVenc+expMeal;
-    const expLiquido=Settings.calcNet(regHours,regDays);
-    const recVenc=Math.round(recHours*recRate*100)/100;
-    const recMeal=Math.round(recMealDays*recMealRate*100)/100;
-    const recExtras=recNatal+recCaduc+recFerias+recFeriasNG;
-    const recTotalAbonos=Math.round((recVenc+recMeal+recExtras)*100)/100;
-    const recTotalRecebido=Math.round((recLiquido+recCartao)*100)/100;
-    const diffHours=Math.round((regHours-recHours)*100)/100;
-    const diffVenc=Math.round((expVenc-recVenc)*100)/100;
-    const diffLiquido=Math.round((expLiquido-recTotalRecebido)*100)/100;
-    const c=document.getElementById('comparison-result');c.style.display='block';
-    let cls='pos',ic='i-check',title='Recibo correto',sub='Os valores conferem com o teu registo.';
-    if(Math.abs(diffHours)>0.05&&diffHours>0){cls='neg';ic='i-alert';title=`Faltam ${Utils.fmtHours(diffHours)}`;sub='Trabalhaste mais horas do que as pagas no recibo.'}
-    else if(Math.abs(diffLiquido)>0.10&&diffLiquido>0){cls='neg';ic='i-alert';title=`Diferença de ${Utils.fmtCurrency(diffLiquido)}`;sub='O valor líquido esperado é superior ao recebido.'}
-    const cellH='padding:8px 10px;font-size:.78rem;';
-    const cellV=`${cellH}text-align:right;font-family:'Syne',sans-serif;font-weight:600;`;
-    const colorDiff=(d)=>Math.abs(d)<0.02?'var(--text3)':d>0?'var(--danger)':'var(--success)';
-    const fmtDiff=(d)=>Math.abs(d)<0.02?'—':(d>0?'+':'')+Utils.fmtCurrency(d);
-    const rescRow=(label,val)=>val>0?`<tr style="border-bottom:1px solid var(--border);"><td style="${cellH}color:var(--text2);">${label}</td><td colspan="2" style="${cellV}color:var(--text);">${Utils.fmtCurrency(val)}</td><td style="${cellH}text-align:right;font-size:.65rem;color:var(--text3);font-family:'Syne',sans-serif;letter-spacing:.3px;">RESCISÃO</td></tr>`:'';
-    c.innerHTML=`
-      <div class="diff-banner ${cls}" style="margin-bottom:14px;">
-        <div class="diff-icon"><svg width="36" height="36"><use href="#${ic}"/></svg></div>
-        <div class="diff-title">${title}</div>
-        <div class="diff-sub">${sub}</div>
+
+  document.getElementById('up-prev').addEventListener('click', () => {
+    uploadYM = Utils.ymPrev(uploadYM);
+    document.getElementById('up-month-lbl').textContent = Utils.ymLabel(uploadYM);
+  });
+  document.getElementById('up-next').addEventListener('click', () => {
+    uploadYM = Utils.ymNext(uploadYM);
+    document.getElementById('up-month-lbl').textContent = Utils.ymLabel(uploadYM);
+  });
+
+  // Drag and drop
+  const zone = document.getElementById('upload-zone');
+  zone.addEventListener('click', () => document.getElementById('file-input').click());
+  zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag'); });
+  zone.addEventListener('dragleave', () => zone.classList.remove('drag'));
+  zone.addEventListener('drop', e => { e.preventDefault(); zone.classList.remove('drag'); handleFile(e.dataTransfer.files[0]); });
+  document.getElementById('file-input').addEventListener('change', e => handleFile(e.target.files[0]));
+
+  function handleFile(file) {
+    if (!file) return;
+    fileReady = true;
+    zone.classList.add('has-file');
+    zone.querySelector('h3').textContent = file.name;
+    zone.querySelector('p').textContent = `${(file.size/1024).toFixed(0)} KB · ${file.type||'desconhecido'}`;
+    document.getElementById('upload-filename').textContent = '';
+    extractedData = null;
+    // Store file for later extraction
+    zone._file = file;
+  }
+
+  // Manual toggle
+  let manualOpen = false;
+  document.getElementById('btn-manual-toggle').addEventListener('click', () => {
+    manualOpen = !manualOpen;
+    document.getElementById('manual-section').style.display = manualOpen ? 'block' : 'none';
+    document.getElementById('btn-manual-toggle').textContent = manualOpen ? 'Ocultar entrada manual' : 'Introduzir dados manualmente';
+  });
+
+  // Analyse button
+  document.getElementById('btn-analyse').addEventListener('click', async () => {
+    // Check if manual data is filled
+    if (manualOpen) {
+      extractedData = readManual();
+      if (!extractedData) { toast(`${icon('i-warn',14)} Preenche pelo menos as horas pagas`, 'err'); return; }
+      runAnalysis(extractedData, uploadYM, 'manual');
+      return;
+    }
+    if (!zone._file) { toast(`${icon('i-warn',14)} Carrega um ficheiro primeiro`, 'err'); return; }
+    await extractAndAnalyse(zone._file);
+  });
+
+  function readManual() {
+    const hours = parseFloat(document.getElementById('man-hours').value);
+    if (!hours) return null;
+    return {
+      payslipHoursMins: Utils.parsePayslipHours(String(hours)),
+      rawHoursStr: String(hours),
+      hourlyRate: parseFloat(document.getElementById('man-rate').value)||5.31,
+      vencimento: parseFloat(document.getElementById('man-venc').value)||null,
+      mealSubsidy: parseFloat(document.getElementById('man-meal').value)||null,
+      natalSubsidy: parseFloat(document.getElementById('man-natal').value)||null,
+      caducidade: parseFloat(document.getElementById('man-caduc').value)||null,
+      feriasSubsidy: parseFloat(document.getElementById('man-ferias').value)||null,
+      feriasNaoGozadas: parseFloat(document.getElementById('man-ferias-ng').value)||null,
+      totalLiquido: parseFloat(document.getElementById('man-liquido').value)||null,
+      cartaoRefeicao: parseFloat(document.getElementById('man-cartao').value)||null,
+    };
+  }
+
+  async function extractAndAnalyse(file) {
+    const statusDiv = document.getElementById('extract-status');
+    const stepsDiv = document.getElementById('extract-steps');
+    const progBar = document.getElementById('extract-progress');
+    statusDiv.style.display = 'block';
+    stepsDiv.innerHTML = '';
+
+    function addStep(msg, type='run', pct=0) {
+      stepsDiv.innerHTML += `<div class="status-line ${type}">${type==='run'?`<div class="spinner"></div>`:icon(type==='ok'?'i-check':'i-warn',14)} ${msg}</div>`;
+      progBar.style.width = pct + '%';
+    }
+    function updateLastStep(msg, type, pct) {
+      const lines = stepsDiv.querySelectorAll('.status-line');
+      if (lines.length) {
+        const last = lines[lines.length-1];
+        last.className = `status-line ${type}`;
+        last.innerHTML = `${type==='ok'?icon('i-check',14):type==='err'?icon('i-warn',14):`<div class="spinner"></div>`} ${msg}`;
+      }
+      if (pct !== undefined) progBar.style.width = pct + '%';
+    }
+
+    let text = '';
+    try {
+      addStep('A ler ficheiro...', 'run', 10);
+      if (file.type === 'application/pdf' || file.name.endsWith('.pdf')) {
+        addStep('A extrair texto do PDF...', 'run', 20);
+        // Use PDF.js
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        const arrayBuffer = await file.arrayBuffer();
+        const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+        let fullText = '';
+        for (let i = 1; i <= pdf.numPages; i++) {
+          const page = await pdf.getPage(i);
+          const content = await page.getTextContent();
+          fullText += content.items.map(item => item.str).join(' ') + '\n';
+        }
+        text = fullText;
+        updateLastStep('Texto extraído do PDF', 'ok', 50);
+      } else {
+        // Image — use Tesseract OCR
+        addStep('A inicializar OCR (Tesseract)...', 'run', 15);
+        const worker = await Tesseract.createWorker('por+eng', 1, {
+          logger: m => {
+            if (m.status === 'recognizing text') {
+              progBar.style.width = (15 + m.progress * 45) + '%';
+            }
+          }
+        });
+        addStep('A reconhecer texto na imagem...', 'run', 20);
+        const result = await worker.recognize(file);
+        text = result.data.text;
+        await worker.terminate();
+        updateLastStep('OCR concluído', 'ok', 60);
+      }
+
+      if (!text.trim()) throw new Error('Sem texto reconhecido');
+
+      addStep('A analisar dados do recibo...', 'run', 65);
+      const data = Parser.parse(text);
+      updateLastStep('Dados extraídos com sucesso', 'ok', 80);
+
+      addStep('A comparar com horas registadas...', 'run', 85);
+      await new Promise(r => setTimeout(r, 300));
+      updateLastStep('Comparação concluída', 'ok', 100);
+
+      extractedData = data;
+      await new Promise(r => setTimeout(r, 400));
+      runAnalysis(data, uploadYM, 'auto', text);
+
+    } catch(err) {
+      updateLastStep('Erro: ' + err.message, 'err', 100);
+      toast(`${icon('i-warn',14)} Erro na extração. Usa entrada manual.`, 'err');
+      document.getElementById('manual-section').style.display = 'block';
+      document.getElementById('btn-manual-toggle').textContent = 'Ocultar entrada manual';
+      manualOpen = true;
+    }
+  }
+
+  function runAnalysis(data, ym, source, rawText='') {
+    const s = Store.getSettings();
+    const shifts = Store.getShifts().filter(sh => sh.date.startsWith(ym));
+    const regMins = shifts.reduce((t, sh) => t + sh.mins, 0);
+    const regDays = new Set(shifts.map(sh => sh.date)).size;
+
+    // Build analysis record
+    const analysis = {
+      id: Date.now().toString(),
+      ym, source, date: Utils.todayStr(),
+      regMins, regDays,
+      payslipData: data,
+      settings: { ...s },
+    };
+
+    // Compute comparison
+    const payMins = data.payslipHoursMins || 0;
+    const diffMins = regMins - payMins;
+
+    const expWage = Math.round(regMins / 60 * s.hourlyRate * 100) / 100;
+    const expMeal = Math.round(regDays * s.mealRate * 100) / 100;
+    const expGross = expWage + expMeal;
+    const expSS = Math.round(expWage * s.ssRate / 100 * 100) / 100;
+    const expNet = Math.round((expGross - expSS) * 100) / 100;
+
+    const payLiquido = (data.totalLiquido || 0) + (data.cartaoRefeicao || 0);
+    const diffNet = Math.round((expNet - payLiquido) * 100) / 100;
+
+    analysis.comparison = {
+      regMins, payMins, diffMins,
+      expWage, expMeal, expGross, expSS, expNet,
+      payLiquido, diffNet,
+    };
+
+    // Determine verdict
+    let verdict = 'ok';
+    if (Math.abs(diffMins) > 10) verdict = diffMins > 0 ? 'alert' : 'warn';
+    else if (Math.abs(diffNet) > 0.50) verdict = 'warn';
+    analysis.verdict = verdict;
+
+    // Save
+    const analyses = Store.getAnalyses();
+    const existing = analyses.findIndex(a => a.ym === ym);
+    if (existing >= 0) analyses[existing] = analysis;
+    else analyses.unshift(analysis);
+    Store.saveAnalyses(analyses);
+
+    toast(`${icon('i-sparkle',14)} Análise concluída!`, 'ok');
+    navigate('analysis');
+    Analysis.render();
+  }
+
+  return { init };
+})();
+
+// ═══════════════════════════════════════════════════════
+// ANALYSIS PAGE
+// ═══════════════════════════════════════════════════════
+const Analysis = (() => {
+  function render() {
+    const analyses = Store.getAnalyses();
+    const latest = analyses[0];
+    const c = document.getElementById('analysis-content');
+    if (!latest) {
+      c.innerHTML = `<div class="empty"><svg><use href="#i-sparkle"/></svg><h3>Sem análise</h3><p>Faz upload de um recibo<br>para ver a comparação aqui</p></div>`;
+      document.getElementById('analysis-month-badge').textContent = '—';
+      return;
+    }
+    document.getElementById('analysis-month-badge').textContent = Utils.ymLabel(latest.ym);
+    c.innerHTML = buildAnalysisHTML(latest);
+  }
+
+  function buildAnalysisHTML(a) {
+    const { regMins, payMins, diffMins, expWage, expMeal, expGross, expSS, expNet, payLiquido, diffNet } = a.comparison;
+    const s = a.settings;
+    const d = a.payslipData;
+
+    const verdictCls = a.verdict;
+    const verdictIcon = a.verdict === 'ok' ? 'i-check' : 'i-warn';
+    const verdictTitle = a.verdict === 'ok' ? 'Recibo correto' : a.verdict === 'alert' ? 'Possível erro de pagamento' : 'Diferença detetada';
+    const verdictSub = a.verdict === 'ok'
+      ? 'Os valores conferem com as horas registadas.'
+      : diffMins > 0
+        ? `Trabalhaste ${Utils.minsToHHMM(Math.abs(diffMins))} a mais do que foram pagas.`
+        : `O recibo inclui ${Utils.minsToHHMM(Math.abs(diffMins))} a mais do que o registado.`;
+
+    // Color helper
+    const dc = (d) => Math.abs(d) < 1 ? 'ok' : d > 0 ? 'neg' : 'pos';
+    const fmtD = (d) => Math.abs(d) < 0.01 ? '—' : (d > 0 ? '+' : '') + Utils.fmtCurrency(d);
+    const fmtDmins = (d) => Math.abs(d) < 1 ? '—' : (d > 0 ? '+' : '-') + Utils.minsToHHMM(Math.abs(d));
+
+    const payRow = (label, exp, pay, isMin=false) => {
+      const df = Math.round((exp - pay) * 100) / 100;
+      return `<div class="brow">
+        <span class="bl">${label}</span>
+        <span class="bv green">${isMin ? Utils.minsToHHMM(exp) : Utils.fmtCurrency(exp)}</span>
+        <span class="bv">${isMin ? Utils.minsToHHMM(pay) : Utils.fmtCurrency(pay)}</span>
+        <span class="bd ${isMin ? (Math.abs(df)<1?'ok':df>0?'neg':'pos') : dc(df)}">${isMin ? fmtDmins(df) : fmtD(df)}</span>
+      </div>`;
+    };
+
+    const extraRow = (label, val) => val > 0 ? `<div class="brow">
+      <span class="bl">${label}</span>
+      <span class="bv" colspan="2" style="grid-column:2/4;">${Utils.fmtCurrency(val)}</span>
+      <span class="bd ok" style="font-size:.65rem;color:var(--text3);">rescisão</span>
+    </div>` : '';
+
+    const payslipExtras = (d.natalSubsidy||0) + (d.caducidade||0) + (d.feriasSubsidy||0) + (d.feriasNaoGozadas||0);
+
+    return `
+      <div class="result-verdict ${verdictCls}">
+        <div class="verdict-icon"><svg><use href="#${verdictIcon}"/></svg></div>
+        <div class="verdict-title">${a.verdict === 'alert' ? '<span style="margin-right:4px;">⚠️</span>' : ''}${verdictTitle}</div>
+        <div class="verdict-sub">${verdictSub}</div>
       </div>
-      <div style="background:var(--bg3);border-radius:12px;overflow:hidden;margin-bottom:10px;border:1px solid var(--border);">
-        <div style="display:grid;grid-template-columns:1fr 80px 80px 60px;padding:8px 10px;background:rgba(0,212,170,.07);border-bottom:1px solid var(--border);">
-          <span style="font-size:.65rem;font-family:'Syne',sans-serif;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;">Verba</span>
-          <span style="font-size:.65rem;font-family:'Syne',sans-serif;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.5px;text-align:right;">Esperado</span>
-          <span style="font-size:.65rem;font-family:'Syne',sans-serif;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;text-align:right;">Recibo</span>
-          <span style="font-size:.65rem;font-family:'Syne',sans-serif;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;text-align:right;">Dif.</span>
+
+      <div class="stats" style="margin-bottom:14px;">
+        <div class="stat">
+          <div class="stat-label">Horas registadas</div>
+          <div class="stat-val green">${Utils.minsToHHMM(regMins)}</div>
+          <div class="stat-sub">${a.regDays} dias trabalhados</div>
         </div>
-        <table style="width:100%;border-collapse:collapse;">
-        <tr style="border-bottom:1px solid var(--border);">
-          <td style="${cellH}color:var(--text2);">Horas trabalhadas</td>
-          <td style="${cellV}color:var(--accent);">${Utils.fmtHours(regHours)}</td>
-          <td style="${cellV}color:var(--text2);">${Utils.fmtHours(recHours)}</td>
-          <td style="${cellV}color:${colorDiff(diffHours)};font-weight:700;">${Math.abs(diffHours)<0.05?'—':(diffHours>0?'+':'')+Utils.fmtHours(diffHours)}</td>
-        </tr>
-        <tr style="border-bottom:1px solid var(--border);">
-          <td style="${cellH}color:var(--text2);">Vencimento (${Utils.fmtCurrency(Settings.hourlyRate)}/h)</td>
-          <td style="${cellV}color:var(--text);">${Utils.fmtCurrency(expVenc)}</td>
-          <td style="${cellV}color:var(--text2);">${Utils.fmtCurrency(recVenc)}</td>
-          <td style="${cellV}color:${colorDiff(diffVenc)};font-weight:700;">${fmtDiff(diffVenc)}</td>
-        </tr>
-        <tr style="border-bottom:1px solid var(--border);">
-          <td style="${cellH}color:var(--text2);">Sub. Refeição (${regDays}d × ${Utils.fmtCurrency(Settings.mealRate)})</td>
-          <td style="${cellV}color:var(--text);">${Utils.fmtCurrency(expMeal)}</td>
-          <td style="${cellV}color:var(--text2);">${Utils.fmtCurrency(recMeal)}</td>
-          <td style="${cellV}color:${colorDiff(expMeal-recMeal)};font-weight:700;">${fmtDiff(expMeal-recMeal)}</td>
-        </tr>
-        ${rescRow('Sub. Natal',recNatal)}
-        ${rescRow('Caducidade',recCaduc)}
-        ${rescRow('Sub. Férias',recFerias)}
-        ${rescRow('Férias não gozadas',recFeriasNG)}
-        <tr style="border-bottom:1px solid rgba(0,212,170,.2);background:rgba(0,0,0,.15);">
-          <td style="${cellH}font-family:'Syne',sans-serif;font-weight:700;color:var(--text);">Total Abonos</td>
-          <td style="${cellV}font-weight:800;color:var(--accent);">${Utils.fmtCurrency(expTotal)}</td>
-          <td style="${cellV}font-weight:800;color:var(--text2);">${Utils.fmtCurrency(recTotalAbonos)}</td>
-          <td></td>
-        </tr>
-        <tr style="border-bottom:1px solid var(--border);">
-          <td style="${cellH}color:var(--danger);">Desc. Seg. Social (${Settings.taxRate}%)</td>
-          <td style="${cellV}color:var(--danger);">-${Utils.fmtCurrency(expSS)}</td>
-          <td colspan="2" style="${cellH}font-size:.7rem;color:var(--text3);text-align:center;">só sobre vencimento</td>
-        </tr>
-        <tr style="background:rgba(0,153,255,.06);">
-          <td style="${cellH}font-family:'Syne',sans-serif;font-weight:800;color:var(--accent2);font-size:.85rem;">Líquido a receber</td>
-          <td style="${cellV}font-weight:800;color:var(--accent2);font-size:.9rem;">${Utils.fmtCurrency(expLiquido)}</td>
-          <td style="${cellV}font-weight:800;color:var(--text2);font-size:.9rem;">${Utils.fmtCurrency(recTotalRecebido)}</td>
-          <td style="${cellV}font-weight:800;font-size:.9rem;color:${colorDiff(diffLiquido)};">${Math.abs(diffLiquido)<0.05?'OK':fmtDiff(diffLiquido)}</td>
-        </tr>
-        </table>
+        <div class="stat">
+          <div class="stat-label">Horas no recibo</div>
+          <div class="stat-val ${diffMins > 5 ? 'red' : 'amber'}">${Utils.minsToHHMM(payMins)}</div>
+          <div class="stat-sub">${d.rawHoursStr ? 'Formato: ' + d.rawHoursStr : 'do recibo'}</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Diferença horas</div>
+          <div class="stat-val ${Math.abs(diffMins)<1?'':'red'}">${Math.abs(diffMins)<1?'0h00':fmtDmins(diffMins)}</div>
+          <div class="stat-sub">${Math.abs(diffMins)<1?'Sem diferença':diffMins>0?'em falta':'excesso'}</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Valor em falta</div>
+          <div class="stat-val ${Math.abs(diffNet)<0.5?'':'red'}">${Math.abs(diffNet)<0.5?'€0.00':Utils.fmtCurrency(Math.abs(diffNet))}</div>
+          <div class="stat-sub">${Math.abs(diffNet)<0.5?'Tudo certo':diffNet>0?'a menos':'a mais'}</div>
+        </div>
       </div>
-      ${recCartao>0?`<div style="padding:10px 14px;background:rgba(245,200,66,.06);border:1px solid rgba(245,200,66,.2);border-radius:10px;font-size:.78rem;color:var(--text3);">Cartão refeição incluído: <strong style="color:var(--accent4);">${Utils.fmtCurrency(recCartao)}</strong></div>`:''}
+
+      ${a.verdict !== 'ok' ? `
+      <div class="card card-${a.verdict==='alert'?'red':'amber'}" style="margin-bottom:14px;">
+        <div style="font-size:.8rem;color:var(--text2);line-height:1.6;">
+          ${diffMins > 1 ? `<strong style="color:var(--${a.verdict==='alert'?'red':'amber'});">Horas em falta: ${Utils.minsToHHMM(diffMins)}</strong><br>
+          Valor estimado em falta: <strong>${Utils.fmtCurrency(Math.abs(diffMins)/60 * s.hourlyRate)}</strong><br>` : ''}
+          ${Math.abs(diffNet) > 0.5 ? `Diferença no líquido: <strong>${Utils.fmtCurrency(Math.abs(diffNet))}</strong>` : ''}
+        </div>
+      </div>` : ''}
+
+      <div class="sec-title">Comparação detalhada</div>
+      <div class="breakdown">
+        <div class="breakdown-head">
+          <span>Verba</span>
+          <span>Esperado</span>
+          <span>Recibo</span>
+          <span>Dif.</span>
+        </div>
+        ${payRow('Horas trabalhadas', regMins, payMins, true)}
+        ${payRow(`Vencimento (${Utils.fmtCurrency(s.hourlyRate)}/h)`, expWage, d.vencimento||expWage)}
+        ${payRow(`Sub. Refeição (${a.regDays}d × ${Utils.fmtCurrency(s.mealRate)})`, expMeal, d.mealSubsidy||expMeal)}
+        ${extraRow('Sub. Natal', d.natalSubsidy)}
+        ${extraRow('Caducidade', d.caducidade)}
+        ${extraRow('Sub. Férias', d.feriasSubsidy)}
+        ${extraRow('Férias não gozadas', d.feriasNaoGozadas)}
+        <div class="brow total">
+          <span class="bl">Total Abonos</span>
+          <span class="bv green">${Utils.fmtCurrency(expGross)}</span>
+          <span class="bv">${Utils.fmtCurrency((d.totalAbonos||expGross))}</span>
+          <span class="bd ok">—</span>
+        </div>
+        <div class="brow" style="background:rgba(255,77,106,.04);">
+          <span class="bl">Desc. SS (${s.ssRate}%)</span>
+          <span class="bv red">-${Utils.fmtCurrency(expSS)}</span>
+          <span class="bv red">${d.ssDiscount ? '-'+Utils.fmtCurrency(d.ssDiscount) : '—'}</span>
+          <span class="bd ok">—</span>
+        </div>
+        <div class="brow highlight">
+          <span class="bl" style="font-weight:700;color:var(--text);">Líquido a receber</span>
+          <span class="bv blue" style="font-size:.88rem;font-weight:700;">${Utils.fmtCurrency(expNet)}</span>
+          <span class="bv" style="font-size:.88rem;font-weight:700;">${Utils.fmtCurrency(payLiquido||expNet)}</span>
+          <span class="bd ${dc(diffNet)}" style="font-size:.82rem;">${fmtD(diffNet)}</span>
+        </div>
+      </div>
+
+      <div class="card" style="font-size:.75rem;color:var(--text3);line-height:1.7;">
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+          <span>Analisado</span><strong style="color:var(--text2);">${a.date}</strong>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+          <span>Fonte</span><span class="badge ${a.source==='auto'?'badge-green':'badge-blue'}">${a.source==='auto'?'Extração automática':'Manual'}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;">
+          <span>Período</span><strong style="color:var(--text2);">${Utils.ymLabel(a.ym)}</strong>
+        </div>
+      </div>
     `;
-  });
-  const dl=(name,content,mime)=>{const b=new Blob([content],{type:mime}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(u)};
-  document.getElementById('btn-export-csv').addEventListener('click',async()=>{
-    const S=await DB.getShiftsByMonth(rYM);
-    if(!S.length){showToast('Sem dados para exportar','error');return}
-    const tH=S.reduce((s,x)=>s+(x.hours||0),0);
-    const rows=[['Data','Entrada','Saída','Pausa(min)','Horas','Cliente','Local','Bruto(€)'],...S.sort((a,b)=>a.date.localeCompare(b.date)).map(s=>[s.date,s.startTime,s.endTime,s.breakMin||0,s.hours.toFixed(2),s.client||'',s.location||'',Settings.calcGross(s.hours).toFixed(2)])];
-    dl(`ShiftTrack_${rYM}.csv`,'\uFEFF'+rows.map(r=>r.map(c=>`"${c}"`).join(',')).join('\n'),'text/csv;charset=utf-8;');
-    showToast('CSV exportado!','success');
-  });
-  document.getElementById('btn-export-pdf').addEventListener('click',async()=>{
-    const S=await DB.getShiftsByMonth(rYM);
-    if(!S.length){showToast('Sem dados para exportar','error');return}
-    const sorted=[...S].sort((a,b)=>a.date.localeCompare(b.date));
-    const tH=S.reduce((s,x)=>s+(x.hours||0),0);
-    const days=new Set(S.map(x=>x.date)).size;
-    const gross=Settings.calcGross(tH),net=Settings.calcNet(tH);
-    const rows=sorted.map(s=>`<tr><td>${Utils.fmtDate(s.date)}</td><td>${s.startTime}</td><td>${s.endTime}</td><td>${s.breakMin||0}min</td><td><strong>${Utils.fmtHours(s.hours)}</strong></td><td>${s.client||'—'}</td><td>${s.location||'—'}</td><td>${Settings.hourlyRate>0?Utils.fmtCurrency(Settings.calcGross(s.hours)):'—'}</td></tr>`).join('');
-    const html=`<!DOCTYPE html><html lang="pt"><head><meta charset="UTF-8"><title>ShiftTrack ${Utils.ymLabel(rYM)}</title><style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:'Segoe UI',Arial,sans-serif;color:#1a1a2e;padding:32px}.header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:28px;padding-bottom:16px;border-bottom:2px solid #00d4aa}.logo{font-size:1.5rem;font-weight:900;color:#00d4aa}.summary{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:28px}.stat{background:#f8f9fa;border-radius:10px;padding:14px;border-left:3px solid #00d4aa}.stat-label{font-size:.65rem;text-transform:uppercase;color:#888;margin-bottom:6px;font-weight:600}.stat-value{font-size:1.3rem;font-weight:900}table{width:100%;border-collapse:collapse;font-size:.82rem}th{background:#0d0f14;color:#fff;padding:10px 12px;text-align:left;font-size:.7rem;text-transform:uppercase}td{padding:9px 12px;border-bottom:1px solid #eee}tr:nth-child(even) td{background:#f8f9fa}.footer{margin-top:28px;padding-top:14px;border-top:1px solid #eee;font-size:.72rem;color:#aaa;display:flex;justify-content:space-between}</style></head><body><div class="header"><div><div class="logo">ShiftTrack</div><div style="font-size:1rem;color:#666;margin-top:2px;">Relatório — ${Utils.ymLabel(rYM)}</div></div><div style="text-align:right;font-size:.78rem;color:#888;">Gerado em ${new Date().toLocaleDateString('pt-PT')}<br>Taxa: ${Utils.fmtCurrency(Settings.hourlyRate)}/h · IRS: ${Settings.taxRate}%</div></div><div class="summary"><div class="stat"><div class="stat-label">Total horas</div><div class="stat-value">${Utils.fmtHours(tH)}</div></div><div class="stat"><div class="stat-label">Dias trabalho</div><div class="stat-value">${days}</div></div><div class="stat"><div class="stat-label">Bruto est.</div><div class="stat-value">${Utils.fmtCurrency(gross)}</div></div><div class="stat"><div class="stat-label">Líquido est.</div><div class="stat-value">${Utils.fmtCurrency(net)}</div></div></div><table><thead><tr><th>Data</th><th>Entrada</th><th>Saída</th><th>Pausa</th><th>Horas</th><th>Cliente</th><th>Local</th><th>Bruto</th></tr></thead><tbody>${rows}</tbody></table><div class="footer"><span>ShiftTrack v1.2</span><span>${S.length} turnos</span></div></body></html>`;
-    const w=window.open('','_blank');if(w){w.document.write(html);w.document.close();w.focus();setTimeout(()=>w.print(),500)}
-    showToast('PDF pronto para imprimir!','success');
-  });
-  return{render};
+  }
+
+  return { render, buildAnalysisHTML };
 })();
 
-const SettingsScreen=(()=>{
-  let tmr=null;
-  async function render(){
-    await Settings.load();
-    document.getElementById('set-hourly-rate').value=Settings.hourlyRate||'';
-    document.getElementById('set-meal-rate').value=Settings.mealRate||'';
-    document.getElementById('set-tax-rate').value=Settings.taxRate||'';
-    document.getElementById('set-irs-rate').value=Settings.irsRate||'';
-    updatePreview();
+// ═══════════════════════════════════════════════════════
+// HISTORY
+// ═══════════════════════════════════════════════════════
+const History = (() => {
+  function render() {
+    const analyses = Store.getAnalyses();
+    const c = document.getElementById('history-list');
+    if (!analyses.length) {
+      c.innerHTML = `<div class="empty"><svg><use href="#i-history"/></svg><h3>Sem histórico</h3><p>As análises realizadas<br>aparecerão aqui</p></div>`;
+      return;
+    }
+    c.innerHTML = analyses.map(a => {
+      const { regMins, payMins, diffMins, diffNet } = a.comparison;
+      const [yr, mo] = a.ym.split('-');
+      const moLabel = new Date(+yr,+mo-1,1).toLocaleDateString('pt-PT',{month:'short'});
+      const pillCls = a.verdict;
+      const pillTxt = a.verdict === 'ok' ? 'Correto' : a.verdict === 'alert' ? 'Erro' : 'Diferença';
+      return `<div class="hist-item" onclick="History.viewAnalysis('${a.id}')">
+        <div class="hist-month-badge">
+          <div class="mo">${moLabel}</div>
+          <div class="yr">${yr}</div>
+        </div>
+        <div class="hist-info">
+          <div class="hist-title">${Utils.ymLabel(a.ym)}</div>
+          <div class="hist-sub">${Utils.minsToHHMM(regMins)} reg. · ${Utils.minsToHHMM(payMins)} pago${Math.abs(diffMins)>1?' · '+(diffMins>0?'-':'+')+ Utils.minsToHHMM(Math.abs(diffMins)):''}</div>
+        </div>
+        <div class="hist-status"><span class="pill ${pillCls}">${pillTxt}</span></div>
+      </div>`;
+    }).join('');
   }
-  async function updatePreview(){
-    const S=await DB.getShiftsByMonth(Utils.curYM());
-    const tH=S.reduce((s,x)=>s+(x.hours||0),0);
-    const days=new Set(S.map(x=>x.date)).size;
-    const venc=Settings.calcVencimento(tH);
-    const meal=Settings.calcMeal(days);
-    const ss=Settings.calcSS(tH);
-    const net=Settings.calcNet(tH,days);
-    document.getElementById('set-preview-gross').textContent=Utils.fmtCurrency(venc);
-    document.getElementById('set-preview-meal').textContent=Utils.fmtCurrency(meal);
-    document.getElementById('set-preview-net').textContent=Utils.fmtCurrency(net);
-    document.getElementById('set-preview-hours').textContent=Utils.fmtHours(tH);
-    document.getElementById('set-preview-days').textContent=days;
-    document.getElementById('set-preview-ss').textContent='-'+Utils.fmtCurrency(ss);
-    document.getElementById('set-preview-total').textContent=Utils.fmtCurrency(venc+meal);
+
+  function viewAnalysis(id) {
+    const a = Store.getAnalyses().find(x => x.id === id);
+    if (!a) return;
+    document.getElementById('analysis-month-badge').textContent = Utils.ymLabel(a.ym);
+    document.getElementById('analysis-content').innerHTML = Analysis.buildAnalysisHTML(a);
+    navigate('analysis');
   }
-  function autoSave(){
-    clearTimeout(tmr);
-    tmr=setTimeout(async()=>{
-      await Settings.save(
-        document.getElementById('set-hourly-rate').value,
-        document.getElementById('set-meal-rate').value,
-        document.getElementById('set-tax-rate').value,
-        document.getElementById('set-irs-rate').value
-      );
-      updatePreview();showToast('Definições guardadas','success');
-    },800);
-  }
-  document.getElementById('set-hourly-rate').addEventListener('input',autoSave);
-  document.getElementById('set-meal-rate').addEventListener('input',autoSave);
-  document.getElementById('set-tax-rate').addEventListener('input',autoSave);
-  document.getElementById('set-irs-rate').addEventListener('input',autoSave);
-  return{render};
+
+  return { render, viewAnalysis };
 })();
+
+// ═══════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════
+Dashboard.render();
+Upload.init();
 </script>
 </body>
 </html>
